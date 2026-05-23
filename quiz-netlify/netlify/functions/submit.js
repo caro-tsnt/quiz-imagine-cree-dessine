@@ -3,9 +3,9 @@ exports.handler = async function(event) {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  const SYSTEME_API_KEY = "xmfz53w0mudpwhlkqwrxj4d3g6s2mah60qvd2eziht5h5gcquor3m8lvv0oha3wp";
-  const AIRTABLE_TOKEN = "patVL0HFFe4uP3qZM.805dcf23f53e68dd51294f05eef457210e3bddc0cdcdaba84ca2f76f1143a2c5";
-  const AIRTABLE_BASE_ID = "app9y8PA33kd0MyhB";
+  const SYSTEME_API_KEY = process.env.SYSTEME_API_KEY;
+  const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE = "Réponses quiz";
 
   let data;
@@ -18,11 +18,13 @@ exports.handler = async function(event) {
   const { prenom, email, tel, answers, diagnostic } = data;
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
-  // Récupérer d'abord les IDs des tags
   let tagIds = [];
   try {
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
-      headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json" }
+      headers: {
+        "X-API-Key": SYSTEME_API_KEY,
+        "Content-Type": "application/json"
+      }
     });
     const tagsData = await tagsRes.json();
     const tagNames = ["Téléchargement du bonus", "Toute ma liste"];
@@ -32,35 +34,45 @@ exports.handler = async function(event) {
       });
     }
   } catch(e) {
-    console.error("Erreur récupération tags:", e);
+    console.error("Erreur récupération tags Systeme.io:", e);
   }
 
-  // Créer ou mettre à jour le contact
   try {
     const fields = [
       { slug: "first_name", value: prenom || "" },
       { slug: "phone_number", value: tel || "" },
       { slug: "diagnostic_quiz", value: diagnostic || "" }
     ];
-
     await fetch("https://api.systeme.io/api/contacts", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": SYSTEME_API_KEY
+      },
       body: JSON.stringify({ email, fields, tags: tagIds })
     });
   } catch(e) {
-    console.error("Erreur Systeme.io:", e);
+    console.error("Erreur envoi Systeme.io:", e);
   }
 
   // ── 2. AIRTABLE ────────────────────────────────────────────────────────────
-  const q2Labels = ["Je ne sais pas quoi travailler ni dans quel ordre", "J'abandonne en cours de route", "Je fais toujours les mêmes erreurs", "Je manque de confiance"];
+  const niveauLabels = [
+    "Je ne sais pas par où commencer",
+    "Résultat pas du tout ce que j'imaginais",
+    "Je reproduis mais pas de tête",
+    "Je me débrouille mais ça me frustre"
+  ];
+  const q2Labels = [
+    "Je ne sais pas quoi travailler ni dans quel ordre",
+    "J'abandonne en cours de route",
+    "Je fais toujours les mêmes erreurs",
+    "Je manque de confiance"
+  ];
   const q3Labels = ["Rarement ou jamais", "De temps en temps", "1 à 2 fois par semaine", "Régulièrement"];
   const q4Labels = ["Je froisse la feuille", "Je le range sans le montrer", "J'essaie de corriger", "Je rigole et je passe au suivant"];
   const q5Labels = ["30 min ou moins", "30 min à 1h", "1h à 2h", "Plus de 2h"];
   const q6Labels = ["Personnages originaux", "Portraits expressifs", "Créatures et animaux", "Illustrations perso/pro", "Fanarts"];
   const q7Labels = ["Réaliste / semi-réaliste", "Stylisé / manga / cartoon", "J'explore !"];
-
-  const niveauLabels = ["Je ne sais pas par où commencer", "Résultat pas du tout ce que j'imaginais", "Je reproduis mais pas de tête", "Je me débrouille mais ça m'frustre"];
 
   const airtableRecord = {
     fields: {
@@ -82,21 +94,31 @@ exports.handler = async function(event) {
   };
 
   try {
-    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${AIRTABLE_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ records: [airtableRecord] })
-    });
+    const atRes = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${AIRTABLE_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ records: [airtableRecord] })
+      }
+    );
+    if (!atRes.ok) {
+      const err = await atRes.text();
+      console.error("Erreur Airtable:", err);
+    }
   } catch(e) {
-    console.error("Erreur Airtable:", e);
+    console.error("Erreur envoi Airtable:", e);
   }
 
   return {
     statusCode: 200,
-    headers: { "Access-Control-Allow-Origin": "*" },
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ success: true })
   };
 };
