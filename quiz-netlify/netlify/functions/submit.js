@@ -50,7 +50,7 @@ exports.handler = async function(event) {
     }
     console.log("Tags trouvés:", JSON.stringify(tagIds));
 
-    // Champs de base + champ personnalisé diagnostic_quiz
+    // Champs à mettre à jour
     const fields = [
       { slug: "first_name", value: prenom || "" },
       { slug: "phone_number", value: tel || "" },
@@ -74,41 +74,56 @@ exports.handler = async function(event) {
       ? searchData.items[0]
       : null;
 
-    let contactResult;
+    let contactId;
 
     if (existingContact) {
-      // Contact existant → PATCH pour mettre à jour + tags
-      const patchBody = { fields };
-      if (tagIds.length > 0) patchBody.tags = tagIds;
-
+      // Contact existant → PATCH pour mettre à jour les champs
+      contactId = existingContact.id;
       const patchRes = await fetch(
-        `https://api.systeme.io/api/contacts/${existingContact.id}`,
+        `https://api.systeme.io/api/contacts/${contactId}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             "X-API-Key": SYSTEME_API_KEY
           },
-          body: JSON.stringify(patchBody)
+          body: JSON.stringify({ fields })
         }
       );
-      contactResult = await patchRes.text();
-      console.log("Systeme.io PATCH réponse:", patchRes.status, contactResult);
+      const patchResult = await patchRes.text();
+      console.log("Systeme.io PATCH réponse:", patchRes.status, patchResult);
     } else {
-      // Nouveau contact → POST
-      const contactBody = { email, fields };
-      if (tagIds.length > 0) contactBody.tags = tagIds;
-
+      // Nouveau contact → POST (sans tags dans le body, bug API Systeme.io)
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-API-Key": SYSTEME_API_KEY
         },
-        body: JSON.stringify(contactBody)
+        body: JSON.stringify({ email, fields })
       });
-      contactResult = await postRes.text();
-      console.log("Systeme.io POST réponse:", postRes.status, contactResult);
+      const postData = await postRes.json();
+      contactId = postData.id;
+      console.log("Systeme.io POST réponse:", postRes.status, JSON.stringify(postData));
+    }
+
+    // Appliquer les tags en appels séparés (obligatoire avec l'API Systeme.io)
+    if (tagIds.length > 0 && contactId) {
+      for (const tag of tagIds) {
+        const tagRes = await fetch(
+          `https://api.systeme.io/api/contacts/${contactId}/tags`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": SYSTEME_API_KEY
+            },
+            body: JSON.stringify({ tagId: tag.id })
+          }
+        );
+        const tagResult = await tagRes.text();
+        console.log(`Tag ${tag.id} appliqué: ${tagRes.status}`, tagResult);
+      }
     }
 
   } catch(e) {
