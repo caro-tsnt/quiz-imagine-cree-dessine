@@ -87,8 +87,8 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 .stop-desc { font-size: 13.5px; color: #6b4226; line-height: 1.55; }
 .stop-desc b { color: #e2790e; font-weight: 500; }
 .cta-card { background: #e2790e; border-radius: 14px; padding: 28px; text-align: center; margin-bottom: 20px; }
-.cta-eyebrow { font-family: "Oswald", sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #fdf0dc; margin-bottom: 10px; opacity: 0.8; }
-.cta-title { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #fdf0dc; margin-bottom: 16px; line-height: 1.6; text-align: left; }
+.cta-eyebrow { font-family: "Oswald", sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #fdf0dc; margin-bottom: 10px; opacity: 0.8; }
+.cta-title { font-family: "Archivo Narrow", sans-serif; font-size: 16px; color: #fdf0dc; margin-bottom: 16px; line-height: 1.6; text-align: left; }
 .cta-title b { font-weight: 500; color: #fff; }
 .cta-sub { font-size: 18px; color: #fff; margin-bottom: 20px; line-height: 1.65; text-align: left; font-weight: 500; }
 .cta-sub b { color: #fdf0dc; font-style: italic; }
@@ -234,8 +234,8 @@ function computeDiagnosis(){
   const objLabels=objIndices.map(i=>objQ.options[i].objLabel).join(", ");
   const primaryObj=objQ.options[objIndices[0]];
   const maxObjExtra=Math.max(...objIndices.map(i=>objQ.options[i].extraWeeks||0));
-  const niveauLabel=niveau===0?"compl\u00e8tement d\u00e9butant\u00b7e":niveau===1?"d\u00e9butant\u00b7e avec quelques bases":niveau===2?"interm\u00e9diaire":"avanc\u00e9\u00b7e";
-  const niveauShort=niveau<=1?"D\u00e9butant\u00b7e":niveau===2?"Interm\u00e9diaire":"Avanc\u00e9\u00b7e";
+  const niveauLabel=niveau===0?"compl\u00e8tement d\u00e9butant\u00b7e":niveau===1?"d\u00e9butant\u00b7e avec quelques bases":niveau===2?"interm\u00e9diaire":"interm\u00e9diaire avanc\u00e9\u00b7e";
+  const niveauShort=niveau<=1?"D\u00e9butant\u00b7e":niveau===2?"Interm\u00e9diaire":"Interm\u00e9diaire avanc\u00e9\u00b7e";
   let base=niveau===0?[10,14]:niveau===1?[7,11]:niveau===2?[4,8]:[2,5];
   if(dispo===0) base=base.map(x=>x+12);
   else if(dispo===1) base=base.map(x=>x+4);
@@ -365,7 +365,7 @@ function renderCapture(){
     <div class="step-label">Presque l\u00e0\u00a0!</div>
     <div class="capture-card">
       <div class="capture-title">Ton diagnostic personnalis\u00e9 est pr\u00eat\u00a0!</div>
-      <div class="capture-sub">Renseigne tes coordonn\u00e9es pour d\u00e9couvrir ton analyse compl\u00e8te. Je d\u00e9teste le spam. Tes donn\u00e9es ne seront jamais partag\u00e9es \u00e0 des tiers et sont 100\u00a0% s\u00e9curis\u00e9es.</div>
+      <div class="capture-sub">Renseigne tes coordonn\u00e9es pour d\u00e9couvrir ton analyse compl\u00e8te.<br><em style=\"font-size:12px;color:#b09984;\">Je d\u00e9teste le spam. Tes donn\u00e9es sont 100\u00a0% s\u00e9curis\u00e9es et ne seront jamais partag\u00e9es \u00e0 des tiers.</em></div>
       <div class="field-group">
         <input class="field-input" id="cap-prenom" type="text" placeholder="Ton pr\u00e9nom" autocomplete="given-name"/>
         <input class="field-input" id="cap-email" type="email" placeholder="Ton adresse email" autocomplete="email"/>
@@ -373,7 +373,7 @@ function renderCapture(){
       </div>
       <label class="consent-row" id="consent-row">
         <div class="consent-box" id="consent-box"></div>
-        <span class="consent-text">J\u2019accepte d\u2019\u00eatre recontact\u00e9\u00b7e par email et/ou par sms par Caroline dans le cadre de mon diagnostic dessin. Je peux me d\u00e9sinscrire \u00e0 tout moment.</span>
+        <span class="consent-text">J\u2019accepte d\u2019\u00eatre recontact\u00e9\u00b7e par email et/ou sms par Caroline dans le cadre de mon diagnostic dessin. Je peux me d\u00e9sinscrire \u00e0 tout moment.</span>
       </label>
       <p class="legal">En continuant, tu acceptes de recevoir ton diagnostic par email. Donn\u00e9es trait\u00e9es conform\u00e9ment au RGPD.</p>
       <button class="next-btn" id="cap-btn" style="margin-top:16px;" disabled>D\u00e9couvrir mon diagnostic</button>
@@ -399,7 +399,7 @@ function renderResult(){
   const dispoDot=d.dispo<=1?"low":d.dispo===2?"mid":"high";
   const regularDot=d.regularite<=1?"low":d.regularite===2?"mid":"high";
   const freinDot=(d.blocTech+d.blocMental)>=2?"low":(d.blocTech+d.blocMental)===1?"mid":"high";
-  const niveauVal=d.niveau<=1?"D\u00e9butant\u00b7e":d.niveau===2?"Interm\u00e9diaire":"Avanc\u00e9\u00b7e";
+  const niveauVal=d.niveau<=1?"D\u00e9butant\u00b7e":d.niveau===2?"Interm\u00e9diaire":"Interm\u00e9diaire avanc\u00e9\u00b7e";
   const dispoVal=d.dispo===0?"Moins de 30 min":d.dispo===1?"30 min \u00e0 1h":d.dispo===2?"1h \u00e0 2h":"Plus de 2h";
   const regularVal=d.regularite<=1?"Irr\u00e9gulier\u00b7e":d.regularite===2?"Assez r\u00e9gulier\u00b7e":"Tr\u00e8s r\u00e9gulier\u00b7e";
   const freinVal=(d.blocTech+d.blocMental)>=2?"Multiples freins":(d.blocTech+d.blocMental)===1?"Un frein principal":"Peu de freins";
