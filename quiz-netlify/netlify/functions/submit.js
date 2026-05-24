@@ -31,7 +31,7 @@ exports.handler = async function(event) {
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
-    // Récupérer tous les tags
+    // Récupérer les tags
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
       headers: {
         "X-API-Key": SYSTEME_API_KEY,
@@ -50,26 +50,67 @@ exports.handler = async function(event) {
     }
     console.log("Tags trouvés:", JSON.stringify(tagIds));
 
+    // Champs de base + champ personnalisé diagnostic_quiz
     const fields = [
       { slug: "first_name", value: prenom || "" },
       { slug: "phone_number", value: tel || "" },
       { slug: "diagnostic_quiz", value: (diagnostic || "").substring(0, 500) }
     ];
 
-    const contactBody = { email, fields };
-    if (tagIds.length > 0) contactBody.tags = tagIds;
+    // Vérifier si le contact existe déjà
+    const searchRes = await fetch(
+      `https://api.systeme.io/api/contacts?email=${encodeURIComponent(email)}`,
+      {
+        headers: {
+          "X-API-Key": SYSTEME_API_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    const searchData = await searchRes.json();
+    console.log("Recherche contact existant:", JSON.stringify(searchData));
 
-    const contactRes = await fetch("https://api.systeme.io/api/contacts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": SYSTEME_API_KEY
-      },
-      body: JSON.stringify(contactBody)
-    });
+    const existingContact = searchData.items && searchData.items.length > 0
+      ? searchData.items[0]
+      : null;
 
-    const contactResult = await contactRes.text();
-    console.log("Systeme.io réponse:", contactRes.status, contactResult);
+    let contactResult;
+
+    if (existingContact) {
+      // Contact existant → PATCH pour mettre à jour + tags
+      const patchBody = { fields };
+      if (tagIds.length > 0) patchBody.tags = tagIds;
+
+      const patchRes = await fetch(
+        `https://api.systeme.io/api/contacts/${existingContact.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": SYSTEME_API_KEY
+          },
+          body: JSON.stringify(patchBody)
+        }
+      );
+      contactResult = await patchRes.text();
+      console.log("Systeme.io PATCH réponse:", patchRes.status, contactResult);
+    } else {
+      // Nouveau contact → POST
+      const contactBody = { email, fields };
+      if (tagIds.length > 0) contactBody.tags = tagIds;
+
+      const postRes = await fetch("https://api.systeme.io/api/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": SYSTEME_API_KEY
+        },
+        body: JSON.stringify(contactBody)
+      });
+      contactResult = await postRes.text();
+      console.log("Systeme.io POST réponse:", postRes.status, contactResult);
+    }
+
   } catch(e) {
     console.error("Erreur Systeme.io:", e.message);
   }
