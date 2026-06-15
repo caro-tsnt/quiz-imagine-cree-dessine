@@ -6,6 +6,15 @@ export async function onRequestPost(context) {
   const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE = "Réponses quiz";
 
+  // En-têtes pour Systeme.io — le User-Agent est OBLIGATOIRE,
+  // sinon le pare-feu d'Amazon (CloudFront) bloque la requête (403).
+  const SIO_HEADERS = {
+    "X-API-Key": SYSTEME_API_KEY,
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  };
+
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Content-Type": "application/json"
@@ -25,13 +34,10 @@ export async function onRequestPost(context) {
     console.log("=== DEBUT SYSTEME.IO pour email:", email, "===");
 
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
-      headers: {
-        "X-API-Key": SYSTEME_API_KEY,
-        "Content-Type": "application/json"
-      }
+      headers: SIO_HEADERS
     });
     const tagsText = await tagsRes.text();
-    console.log("Tags - status:", tagsRes.status, "- reponse:", tagsText);
+    console.log("Tags - status:", tagsRes.status, "- reponse:", tagsText.substring(0, 300));
 
     let tagsData;
     try { tagsData = JSON.parse(tagsText); } catch(e) { tagsData = {}; }
@@ -52,15 +58,10 @@ export async function onRequestPost(context) {
 
     const searchRes = await fetch(
       `https://api.systeme.io/api/contacts?email=${encodeURIComponent(email)}`,
-      {
-        headers: {
-          "X-API-Key": SYSTEME_API_KEY,
-          "Content-Type": "application/json"
-        }
-      }
+      { headers: SIO_HEADERS }
     );
     const searchText = await searchRes.text();
-    console.log("Recherche contact - status:", searchRes.status, "- reponse:", searchText);
+    console.log("Recherche contact - status:", searchRes.status, "- reponse:", searchText.substring(0, 300));
 
     let searchData;
     try { searchData = JSON.parse(searchText); } catch(e) { searchData = {}; }
@@ -75,24 +76,18 @@ export async function onRequestPost(context) {
       contactId = existingContact.id;
       const patchRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": SYSTEME_API_KEY
-        },
+        headers: SIO_HEADERS,
         body: JSON.stringify({ fields })
       });
-      console.log("PATCH contact existant - status:", patchRes.status, "- reponse:", await patchRes.text());
+      console.log("PATCH contact existant - status:", patchRes.status, "- reponse:", (await patchRes.text()).substring(0, 300));
     } else {
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": SYSTEME_API_KEY
-        },
+        headers: SIO_HEADERS,
         body: JSON.stringify({ email, fields })
       });
       const postText = await postRes.text();
-      console.log("POST nouveau contact - status:", postRes.status, "- reponse:", postText);
+      console.log("POST nouveau contact - status:", postRes.status, "- reponse:", postText.substring(0, 300));
       try {
         const postData = JSON.parse(postText);
         contactId = postData.id;
@@ -105,13 +100,10 @@ export async function onRequestPost(context) {
       for (const tag of tagIds) {
         const tagRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}/tags`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": SYSTEME_API_KEY
-          },
+          headers: SIO_HEADERS,
           body: JSON.stringify({ tagId: tag.id })
         });
-        console.log(`Tag ${tag.id} - status:`, tagRes.status, "- reponse:", await tagRes.text());
+        console.log(`Tag ${tag.id} - status:`, tagRes.status, "- reponse:", (await tagRes.text()).substring(0, 200));
       }
     }
 
