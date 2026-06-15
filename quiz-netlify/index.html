@@ -122,7 +122,7 @@ const CALENDLY_URL = "https://calendly.com/caro-toussaint96-y_io/30min";
 
 async function submitData(prenom, email, tel, allAnswers, diagResume) {
   try {
-    await fetch("/.netlify/functions/submit", {
+    await fetch("/api/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prenom, email, tel, answers: allAnswers, diagnostic: diagResume })
