@@ -97,9 +97,9 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 
 /* === Résultats élèves (carrousel témoignages) === */
 .rt-section{margin:8px 0 24px;}
-.rt-title{font-family:"Oswald",sans-serif;font-weight:600;font-size:22px;letter-spacing:.5px;color:#301b08;text-align:center;margin:0 0 16px;}
-.rt-carousel{overflow:hidden;border-radius:16px;}
-.rt-track{display:flex;transition:transform .35s ease;align-items:stretch;}
+.rt-title{font-family:"Oswald",sans-serif;font-weight:600;font-size:21px;letter-spacing:.5px;color:#301b08;text-align:center;margin:0 0 16px;}
+.rt-carousel{overflow:hidden;border-radius:16px;transition:height .3s ease;}
+.rt-track{display:flex;transition:transform .35s ease;align-items:flex-start;}
 .rt-card{min-width:100%;box-sizing:border-box;background:#f0ebe6;border-radius:16px;padding:20px 14px;}
 .rt-progress{display:flex;align-items:flex-start;justify-content:center;gap:12px;flex-wrap:wrap;}
 .rt-group{display:flex;flex-direction:column;}
@@ -113,6 +113,7 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 .rt-meta{text-align:center;margin-top:14px;}
 .rt-name{font-family:"Oswald",sans-serif;font-weight:500;font-size:18px;color:#301b08;margin:0;}
 .rt-badge{display:inline-block;font-size:12px;color:#7a4a12;background:#f4d9a8;padding:3px 12px;border-radius:20px;margin:7px 0 0;}
+.rt-badge b{font-weight:700;color:#5a3309;}
 .rt-timing{font-weight:600;color:#301b08;font-size:14px;margin:5px auto 0;max-width:450px;line-height:1.5;}
 .rt-timing b{font-weight:800;color:#e2790e;}
 .rt-quote{font-style:italic;font-size:14px;color:#5c4a38;max-width:460px;line-height:1.55;border-top:1px solid rgba(48,27,8,.18);padding-top:12px;margin:13px auto 0;}
@@ -123,6 +124,8 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 .rt-dot{width:9px;height:9px;border-radius:50%;background:#d8ccbd;cursor:pointer;display:inline-block;}
 .rt-dot.active{background:#e2790e;}
 @media (max-width:480px){.rt-img{height:135px;}.rt-progress{gap:8px;}.rt-fbody{gap:7px;}.rt-arrow{font-size:20px;}}
+/* titre de l'audit plus visible */
+.cta-eyebrow{font-size:15px;font-weight:600;opacity:1;color:#ffffff;}
 </style>
 </head>
 <body>
@@ -149,9 +152,13 @@ const img_q7_explore = "data:image/jpeg;base64,/9j/4QBORXhpZgAATU0AKgAAAAgAAwEaA
 
 const CALENDLY_URL = "https://calendly.com/caro-toussaint96-y_io/30min";
 var rtIndex=0,rtCount=3;
-function rtRender(){var t=document.getElementById("rt-track");if(!t)return;t.style.transform="translateX(-"+(rtIndex*100)+"%)";var ds=document.querySelectorAll(".rt-dot");for(var i=0;i<ds.length;i++){ds[i].className="rt-dot"+(i===rtIndex?" active":"");}}
+function rtH(){var t=document.getElementById("rt-track");if(!t)return;var a=t.children[rtIndex];if(a)t.parentNode.style.height=a.offsetHeight+"px";}
+function rtRender(){var t=document.getElementById("rt-track");if(!t)return;t.style.transform="translateX(-"+(rtIndex*100)+"%)";var ds=document.querySelectorAll(".rt-dot");for(var i=0;i<ds.length;i++){ds[i].className="rt-dot"+(i===rtIndex?" active":"");}rtH();}
 function rtMove(d){rtIndex=(rtIndex+d+rtCount)%rtCount;rtRender();}
 function rtGo(i){rtIndex=i;rtRender();}
+function rtInit(){rtRender();var im=document.querySelectorAll(".rt-img");for(var k=0;k<im.length;k++){im[k].addEventListener("load",rtH);}}
+window.addEventListener("resize",rtH);
+var rtT=setInterval(function(){if(document.getElementById("rt-track")){clearInterval(rtT);rtInit();}},150);
 
 async function submitData(prenom, email, tel, allAnswers, diagResume) {
   try {
@@ -470,8 +477,8 @@ function renderResult(){
       <div class="result-block"><div class="block-label">Ton rythme de progression</div><div class="block-text">${d.dispoTexte}</div></div>
     </div>
     <div class="rt-section">
-      <p class="rt-title">Résultats élèves</p>
-      <div class="rt-carousel"><div class="rt-track" id="rt-track"><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-apres.jpg" alt="après"><p class="rt-cap">Étude d’observation d’après un dessin de Loish</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Lou</p><span class="rt-badge">Niveau au tout début : grand débutant</span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (étude d’observation) en <b>4 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Avant les cours avec Caroline, je n’osais même pas vraiment dessiner… Aujourd’hui, quand je regarde le dessin que je viens de terminer, j’ai presque du mal à croire que c’est moi qui l’ai fait. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div><div class="rt-acol"><img class="rt-img" src="images/marie-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’observation (d’après photo)</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Marie</p><span class="rt-badge">Niveau au tout début : grande débutante</span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>5 à 6 mois</b>, avec <b>1 h30/semaine</b> en moyenne.</p><p class="rt-quote">« Je n’avais aucune base, aucune notion : j’osais très peu dessiner et j’étais frustrée. Aujourd’hui je vois mon évolution et je suis déjà très contente de ce que j’ai réalisé grâce à ta méthode. C’est hyper motivant pour continuer. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’observation</p></div><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Jennyfer</p><span class="rt-badge">Niveau au tout début : débutante</span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>6 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Les cours avec Caroline sont un vrai plaisir : passionnée, pédagogue et toujours à l’écoute. Son approche bienveillante et ses explications claires m’ont permis de gagner en confiance et de constater une réelle évolution depuis mes débuts. »</p></div></div></div></div>
+      <p class="rt-title">Leur parcours, bientôt le tien</p>
+      <div class="rt-carousel"><div class="rt-track" id="rt-track"><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-apres.jpg" alt="après"><p class="rt-cap">Étude d’observation d’après un dessin de Loish</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Lou</p><span class="rt-badge">Niveau de base : <b>grand débutant</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (étude d’observation) en <b>4 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Avant les cours avec Caroline, je n’osais même pas vraiment dessiner… Aujourd’hui, quand je regarde le dessin que je viens de terminer, j’ai presque du mal à croire que c’est moi qui l’ai fait. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div><div class="rt-acol"><img class="rt-img" src="images/marie-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’observation (d’après photo)</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Marie</p><span class="rt-badge">Niveau de base : <b>grande débutante</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>5 à 6 mois</b>, avec <b>1 h30/semaine</b> en moyenne.</p><p class="rt-quote">« Je n’avais aucune base, aucune notion : j’osais très peu dessiner et j’étais frustrée. Aujourd’hui je vois mon évolution et je suis déjà très contente de ce que j’ai réalisé grâce à ta méthode. C’est hyper motivant pour continuer. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’observation</p></div><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Jennyfer</p><span class="rt-badge">Niveau de base : <b>débutante</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>6 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Les cours avec Caroline sont un vrai plaisir : passionnée, pédagogue et toujours à l’écoute. Son approche bienveillante et ses explications claires m’ont permis de gagner en confiance et de constater une réelle évolution depuis mes débuts. »</p></div></div></div></div>
       <div class="rt-controls"><button class="rt-nav" onclick="rtMove(-1)" aria-label="Précédent">‹</button><div class="rt-dots"><span class="rt-dot active" onclick="rtGo(0)"></span><span class="rt-dot" onclick="rtGo(1)"></span><span class="rt-dot" onclick="rtGo(2)"></span></div><button class="rt-nav" onclick="rtMove(1)" aria-label="Suivant">›</button></div>
     </div>
     <div class="cta-card">
