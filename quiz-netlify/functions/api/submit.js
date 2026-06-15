@@ -22,13 +22,19 @@ export async function onRequestPost(context) {
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
+    console.log("=== DEBUT SYSTEME.IO pour email:", email, "===");
+
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
       headers: {
         "X-API-Key": SYSTEME_API_KEY,
         "Content-Type": "application/json"
       }
     });
-    const tagsData = await tagsRes.json();
+    const tagsText = await tagsRes.text();
+    console.log("Tags - status:", tagsRes.status, "- reponse:", tagsText);
+
+    let tagsData;
+    try { tagsData = JSON.parse(tagsText); } catch(e) { tagsData = {}; }
 
     const tagNames = ["Téléchargement du bonus", "Toute ma liste"];
     let tagIds = [];
@@ -37,11 +43,11 @@ export async function onRequestPost(context) {
         if (tagNames.includes(t.name)) tagIds.push({ id: t.id });
       });
     }
+    console.log("Tags trouves:", JSON.stringify(tagIds));
 
     const fields = [
       { slug: "first_name", value: prenom || "" },
-      { slug: "phone_number", value: tel || "" },
-      { slug: "diagnostic_quiz", value: (diagnostic || "").substring(0, 500) }
+      { slug: "phone_number", value: tel || "" }
     ];
 
     const searchRes = await fetch(
@@ -53,7 +59,11 @@ export async function onRequestPost(context) {
         }
       }
     );
-    const searchData = await searchRes.json();
+    const searchText = await searchRes.text();
+    console.log("Recherche contact - status:", searchRes.status, "- reponse:", searchText);
+
+    let searchData;
+    try { searchData = JSON.parse(searchText); } catch(e) { searchData = {}; }
 
     const existingContact = searchData.items && searchData.items.length > 0
       ? searchData.items[0]
@@ -63,7 +73,7 @@ export async function onRequestPost(context) {
 
     if (existingContact) {
       contactId = existingContact.id;
-      await fetch(`https://api.systeme.io/api/contacts/${contactId}`, {
+      const patchRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -71,6 +81,7 @@ export async function onRequestPost(context) {
         },
         body: JSON.stringify({ fields })
       });
+      console.log("PATCH contact existant - status:", patchRes.status, "- reponse:", await patchRes.text());
     } else {
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
@@ -80,13 +91,19 @@ export async function onRequestPost(context) {
         },
         body: JSON.stringify({ email, fields })
       });
-      const postData = await postRes.json();
-      contactId = postData.id;
+      const postText = await postRes.text();
+      console.log("POST nouveau contact - status:", postRes.status, "- reponse:", postText);
+      try {
+        const postData = JSON.parse(postText);
+        contactId = postData.id;
+      } catch(e) {}
     }
+
+    console.log("contactId obtenu:", contactId);
 
     if (tagIds.length > 0 && contactId) {
       for (const tag of tagIds) {
-        await fetch(`https://api.systeme.io/api/contacts/${contactId}/tags`, {
+        const tagRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}/tags`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -94,8 +111,11 @@ export async function onRequestPost(context) {
           },
           body: JSON.stringify({ tagId: tag.id })
         });
+        console.log(`Tag ${tag.id} - status:`, tagRes.status, "- reponse:", await tagRes.text());
       }
     }
+
+    console.log("=== FIN SYSTEME.IO ===");
 
   } catch(e) {
     console.error("Erreur Systeme.io:", e.message);
@@ -140,7 +160,7 @@ export async function onRequestPost(context) {
   };
 
   try {
-    await fetch(
+    const atRes = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`,
       {
         method: "POST",
@@ -151,6 +171,7 @@ export async function onRequestPost(context) {
         body: JSON.stringify({ records: [airtableRecord] })
       }
     );
+    console.log("Airtable - status:", atRes.status);
   } catch(e) {
     console.error("Erreur Airtable:", e.message);
   }
