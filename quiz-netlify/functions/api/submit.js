@@ -1,46 +1,45 @@
+// Cloudflare Pages Function — route automatique : /api/submit
+// Emplacement dans le repo : functions/api/submit.js
+// Variables d'environnement à définir dans Cloudflare Pages (Settings → Environment variables) :
+//   SYSTEME_API_KEY, AIRTABLE_TOKEN, AIRTABLE_BASE_ID
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
+// Pré-vol CORS
+export async function onRequestOptions() {
+  return new Response("", { status: 200, headers: CORS });
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   const SYSTEME_API_KEY = env.SYSTEME_API_KEY;
-  const AIRTABLE_TOKEN = env.AIRTABLE_TOKEN;
+  const AIRTABLE_TOKEN  = env.AIRTABLE_TOKEN;
   const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE = "Réponses quiz";
-
-  // En-têtes pour Systeme.io — le User-Agent est OBLIGATOIRE,
-  // sinon le pare-feu d'Amazon (CloudFront) bloque la requête (403).
-  const SIO_HEADERS = {
-    "X-API-Key": SYSTEME_API_KEY,
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  };
-
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Content-Type": "application/json"
-  };
 
   let data;
   try {
     data = await request.json();
-  } catch(e) {
-    return new Response("Invalid JSON", { status: 400 });
+  } catch (e) {
+    return new Response("Invalid JSON", { status: 400, headers: CORS });
   }
 
   const { prenom, email, tel, answers, diagnostic } = data;
+  const safeAnswers = answers || {};
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
-    console.log("=== DEBUT SYSTEME.IO pour email:", email, "===");
-
+    // Récupérer les tags
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
-      headers: SIO_HEADERS
+      headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json" }
     });
-    const tagsText = await tagsRes.text();
-    console.log("Tags - status:", tagsRes.status, "- reponse:", tagsText.substring(0, 300));
-
-    let tagsData;
-    try { tagsData = JSON.parse(tagsText); } catch(e) { tagsData = {}; }
+    const tagsData = await tagsRes.json();
+    console.log("Tags disponibles:", JSON.stringify(tagsData));
 
     const tagNames = ["Téléchargement du bonus", "Toute ma liste"];
     let tagIds = [];
@@ -49,22 +48,22 @@ export async function onRequestPost(context) {
         if (tagNames.includes(t.name)) tagIds.push({ id: t.id });
       });
     }
-    console.log("Tags trouves:", JSON.stringify(tagIds));
+    console.log("Tags trouvés:", JSON.stringify(tagIds));
 
+    // Champs à mettre à jour
     const fields = [
       { slug: "first_name", value: prenom || "" },
-      { slug: "phone_number", value: tel || "" }
+      { slug: "phone_number", value: tel || "" },
+      { slug: "diagnostic_quiz", value: (diagnostic || "").substring(0, 500) }
     ];
 
+    // Vérifier si le contact existe déjà
     const searchRes = await fetch(
       `https://api.systeme.io/api/contacts?email=${encodeURIComponent(email)}`,
-      { headers: SIO_HEADERS }
+      { headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json" } }
     );
-    const searchText = await searchRes.text();
-    console.log("Recherche contact - status:", searchRes.status, "- reponse:", searchText.substring(0, 300));
-
-    let searchData;
-    try { searchData = JSON.parse(searchText); } catch(e) { searchData = {}; }
+    const searchData = await searchRes.json();
+    console.log("Recherche contact existant:", JSON.stringify(searchData));
 
     const existingContact = searchData.items && searchData.items.length > 0
       ? searchData.items[0]
@@ -73,43 +72,47 @@ export async function onRequestPost(context) {
     let contactId;
 
     if (existingContact) {
+      // Contact existant → PATCH pour mettre à jour les champs
       contactId = existingContact.id;
-      const patchRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}`, {
-        method: "PATCH",
-        headers: SIO_HEADERS,
-        body: JSON.stringify({ fields })
-      });
-      console.log("PATCH contact existant - status:", patchRes.status, "- reponse:", (await patchRes.text()).substring(0, 300));
+      const patchRes = await fetch(
+        `https://api.systeme.io/api/contacts/${contactId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+          body: JSON.stringify({ fields })
+        }
+      );
+      const patchResult = await patchRes.text();
+      console.log("Systeme.io PATCH réponse:", patchRes.status, patchResult);
     } else {
+      // Nouveau contact → POST (sans tags dans le body, bug API Systeme.io)
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
-        headers: SIO_HEADERS,
+        headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
         body: JSON.stringify({ email, fields })
       });
-      const postText = await postRes.text();
-      console.log("POST nouveau contact - status:", postRes.status, "- reponse:", postText.substring(0, 300));
-      try {
-        const postData = JSON.parse(postText);
-        contactId = postData.id;
-      } catch(e) {}
+      const postData = await postRes.json();
+      contactId = postData.id;
+      console.log("Systeme.io POST réponse:", postRes.status, JSON.stringify(postData));
     }
 
-    console.log("contactId obtenu:", contactId);
-
+    // Appliquer les tags en appels séparés (obligatoire avec l'API Systeme.io)
     if (tagIds.length > 0 && contactId) {
       for (const tag of tagIds) {
-        const tagRes = await fetch(`https://api.systeme.io/api/contacts/${contactId}/tags`, {
-          method: "POST",
-          headers: SIO_HEADERS,
-          body: JSON.stringify({ tagId: tag.id })
-        });
-        console.log(`Tag ${tag.id} - status:`, tagRes.status, "- reponse:", (await tagRes.text()).substring(0, 200));
+        const tagRes = await fetch(
+          `https://api.systeme.io/api/contacts/${contactId}/tags`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+            body: JSON.stringify({ tagId: tag.id })
+          }
+        );
+        const tagResult = await tagRes.text();
+        console.log(`Tag ${tag.id} appliqué: ${tagRes.status}`, tagResult);
       }
     }
 
-    console.log("=== FIN SYSTEME.IO ===");
-
-  } catch(e) {
+  } catch (e) {
     console.error("Erreur Systeme.io:", e.message);
   }
 
@@ -128,7 +131,8 @@ export async function onRequestPost(context) {
   ];
   const q3Labels = ["Rarement ou jamais", "De temps en temps", "1 à 2 fois par semaine", "Régulièrement"];
   const q4Labels = ["Je froisse la feuille", "Je le range sans le montrer", "J'essaie de corriger", "Je rigole et je passe au suivant"];
-  const q5Labels = ["30 min ou moins", "30 min à 1h", "1h à 2h", "Plus de 2h"];
+  // ⚠️ mis à jour pour coller aux nouveaux créneaux de Q5 dans le quiz
+  const q5Labels = ["1h ou moins", "Entre 1h et 2h", "Entre 2h et 4h", "Plus de 4h"];
   const q6Labels = ["Personnages originaux", "Portraits expressifs", "Créatures et animaux", "Illustrations perso/pro", "Fanarts"];
   const q7Labels = ["Réaliste / semi-réaliste", "Stylisé / manga / cartoon", "J'explore !"];
 
@@ -138,15 +142,15 @@ export async function onRequestPost(context) {
       "Email": email || "",
       "Téléphone": tel || "",
       "Date": new Date().toISOString(),
-      "Q1 - Niveau actuel": answers.q1 !== undefined ? niveauLabels[answers.q1] : "",
-      "Q2 - Blocages cochés": (answers.q2 || []).map(i => q2Labels[i]).join(", "),
-      "Q2 - Précision libre": answers.q2_open || "",
-      "Q3 - Régularité": answers.q3 !== undefined ? q3Labels[answers.q3] : "",
-      "Q4 - Rapport à l'erreur": answers.q4 !== undefined ? q4Labels[answers.q4] : "",
-      "Q5 - Disponibilité": answers.q5 !== undefined ? q5Labels[answers.q5] : "",
-      "Q6 - Objectifs dessin": (answers.q6 || []).map(i => q6Labels[i]).join(", "),
-      "Q7 - Style visé": answers.q7 !== undefined ? q7Labels[answers.q7] : "",
-      "Q8 - Ressenti dans 1 an": answers.q8 || "",
+      "Q1 - Niveau actuel": safeAnswers.q1 !== undefined ? niveauLabels[safeAnswers.q1] : "",
+      "Q2 - Blocages cochés": (safeAnswers.q2 || []).map(i => q2Labels[i]).join(", "),
+      "Q2 - Précision libre": safeAnswers.q2_open || "",
+      "Q3 - Régularité": safeAnswers.q3 !== undefined ? q3Labels[safeAnswers.q3] : "",
+      "Q4 - Rapport à l'erreur": safeAnswers.q4 !== undefined ? q4Labels[safeAnswers.q4] : "",
+      "Q5 - Disponibilité": safeAnswers.q5 !== undefined ? q5Labels[safeAnswers.q5] : "",
+      "Q6 - Objectifs dessin": (safeAnswers.q6 || []).map(i => q6Labels[i]).join(", "),
+      "Q7 - Style visé": safeAnswers.q7 !== undefined ? q7Labels[safeAnswers.q7] : "",
+      "Q8 - Ressenti dans 1 an": safeAnswers.q8 || "",
       "Diagnostic complet": diagnostic || ""
     }
   };
@@ -163,24 +167,14 @@ export async function onRequestPost(context) {
         body: JSON.stringify({ records: [airtableRecord] })
       }
     );
-    console.log("Airtable - status:", atRes.status);
-  } catch(e) {
+    const atResult = await atRes.text();
+    console.log("Airtable réponse:", atRes.status, atResult);
+  } catch (e) {
     console.error("Erreur Airtable:", e.message);
   }
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
-    headers: corsHeaders
-  });
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "POST, OPTIONS"
-    }
+    headers: { ...CORS, "Content-Type": "application/json" }
   });
 }
