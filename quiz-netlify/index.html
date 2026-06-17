@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Quiz — Imagine, Crée, Dessine</title>
+<title>Quiz, Imagine, Crée, Dessine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Archivo+Narrow:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -284,8 +284,7 @@ function computeDiagnosis(){
   const regArr=[0.7,0.85,1,1];
   const regFactor=regArr[regularite]!==undefined?regArr[regularite]:0.85;
   const hsem=hsemBase*regFactor;
-  const targetMap=[350,250,300];
-  let target=targetMap[styleIdx]!==undefined?targetMap[styleIdx]:300;
+  let target=250; // Niveau solide = P3 pour tous les styles (styleIdx ne sert plus qu'au libelle styleStr)
   if(target<=start){ const nxt=PALIERS.find(p=>p>start); target=nxt!==undefined?nxt:900; }
   const remaining=target-start;
   const weeksFor=h=>Math.max(1,Math.ceil(h/hsem));
@@ -305,14 +304,23 @@ function computeDiagnosis(){
   const fr=n=>(""+n).replace(".",",");
   let rythmeLine;
   if(dispo<3){ const altH=hsemMap[dispo+1]*regFactor; const altW=Math.max(1,Math.ceil(remaining/altH)); rythmeLine="\u00c0 ton rythme ("+fr(hsemBase)+"\u00a0h/sem) \u2248 <b>"+dureeObjectif+"</b> \u00b7 \u00e0 "+fr(hsemMap[dispo+1])+"\u00a0h/sem avec un plan structur\u00e9 \u2248 <b>"+humanDur(altW)+"</b>"; }
-  else { rythmeLine="\u00c0 ce rythme soutenu ("+fr(hsemBase)+"\u00a0h/sem), tu vises <b>"+dureeObjectif+"</b> \u2014 et avec un plan structur\u00e9, chaque heure compte double."; }
+  else { rythmeLine="\u00c0 ce rythme soutenu ("+fr(hsemBase)+"\u00a0h/sem), tu vises <b>"+dureeObjectif+"</b>, et avec un plan structur\u00e9, chaque heure compte double."; }
+  const objMonths=Math.round(objWeeks/4.345);
+  const isLong=objMonths>=48;
+  const dispoShort=["moins d\u20191h par semaine","1 \u00e0 2h par semaine","2 \u00e0 4h par semaine","plus de 4h par semaine"][dispo]||"ce rythme";
+  let finalLine;
+  if(isLong){
+    const leverH=hsemBase<3?3:5; const altW2=Math.max(1,Math.ceil(remaining/leverH));
+    const lever=" En passant \u00e0 "+fr(leverH)+"\u00a0h/sem, tu atteindrais le niveau solide en <b>"+humanDur(altW2)+"</b>.";
+    finalLine="\u00c0 "+dispoShort+", une vraie ma\u00eetrise demande <b>plusieurs ann\u00e9es</b>, mais tu peux d\u00e9j\u00e0 prendre du plaisir bien avant \u00e7a."+lever;
+  } else { finalLine=rythmeLine; }
   const jalon1Desc=primaryObj&&primaryObj.jalon1?primaryObj.jalon1:"tu poses tes premi\u00e8res formes avec intention";
   const jalon2Desc=primaryObj&&primaryObj.jalon2?primaryObj.jalon2:"tu reproduis fid\u00e8lement ce que tu observes";
   const jalon3Desc=primaryObj&&primaryObj.jalon3?primaryObj.jalon3:"tu dessines ce que tu imagines dans ton propre style";
   const styleStr=styleOpt.styleLabel?" en style "+styleOpt.styleLabel:"";
   const isHardObj=target>=350;
   let niveauObjTexte="";
-  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") demande un vrai chemin\u2014mais <b>tes premiers vrais r\u00e9sultats arrivent d\u00e8s "+dureePremier+"</b>. Le niveau solide complet se construit sur "+dureeObjectif+", et <b>chaque \u00e9tape est d\u00e9j\u00e0 gratifiante</b>.";
+  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") demande un vrai chemin, mais <b>tes premiers vrais r\u00e9sultats arrivent d\u00e8s "+dureePremier+"</b>. Le niveau solide complet se construit sur "+dureeObjectif+", et <b>chaque \u00e9tape est d\u00e9j\u00e0 gratifiante</b>.";
   else if(niveau<=1&&!isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>tout \u00e0 fait accessible</b> avec la bonne m\u00e9thode. Premiers r\u00e9sultats visibles d\u00e8s "+dureePremier+", et un niveau solide en "+dureeObjectif+".";
   else if(niveau===2&&isHardObj) niveauObjTexte="Tu es <b>interm\u00e9diaire</b>, ce qui est d\u00e9j\u00e0 une belle base. En "+dureeObjectif+" tu franchis le cap entre \u00ab\u00a0je me d\u00e9brouille\u00a0\u00bb et \u00ab\u00a0je cr\u00e9e vraiment\u00a0\u00bb, avec des progr\u00e8s nets d\u00e8s "+dureePremier+".";
   else niveauObjTexte="Ton niveau actuel et ton objectif ("+objLabels+styleStr+") sont <b>bien align\u00e9s</b>. Premiers gains d\u00e8s "+dureePremier+", et un niveau de fluidit\u00e9 qui va te surprendre en "+dureeObjectif+".";
@@ -326,12 +334,12 @@ function computeDiagnosis(){
   else if(mental===2) mentalTexte="Tu cherches \u00e0 comprendre et \u00e0 corriger. C\u2019est <b>une des meilleures dispositions pour progresser</b>\u00a0: tu ne l\u00e2ches pas, tu ajustes.";
   else mentalTexte="Tu as une <b>belle l\u00e9g\u00e8ret\u00e9 face \u00e0 l\u2019erreur</b>. Les personnes qui acceptent d\u2019\u00eatre imparfaites progressent beaucoup plus vite. Garde pr\u00e9cieusement cet \u00e9tat d\u2019esprit.";
   let dispoTexte="";
-  if(dispo===0) dispoTexte="<b>1h ou moins par semaine</b>, c\u2019est peu, mais ce n\u2019est pas rien. \u00c0 ce rythme, chaque session doit \u00eatre <b>tr\u00e8s cibl\u00e9e</b>\u2014et l\u2019estimation en tient compte honn\u00eatement.";
+  if(dispo===0) dispoTexte="<b>1h ou moins par semaine</b>, c\u2019est peu, mais ce n\u2019est pas rien. \u00c0 ce rythme, chaque session doit \u00eatre <b>tr\u00e8s cibl\u00e9e</b>, et l\u2019estimation en tient compte honn\u00eatement.";
   else if(dispo===1) dispoTexte="<b>Entre 1h et 2h par semaine</b>, c\u2019est un rythme honn\u00eate. Avec une m\u00e9thode efficace, tu progresses <b>de fa\u00e7on r\u00e9guli\u00e8re et visible</b>.";
   else if(dispo===2) dispoTexte="<b>Entre 2h et 4h par semaine</b>, c\u2019est un bon rythme. Les progr\u00e8s deviennent clairs, \u00e0 condition de pratiquer plut\u00f4t que de regarder des tutos.";
   else dispoTexte="<b>Plus de 4h par semaine</b>, c\u2019est un vrai investissement. Bien orient\u00e9e, cette \u00e9nergie peut rendre tes progr\u00e8s <b>spectaculaires</b>.";
   const diagResume="Niveau:"+niveauShort+"|Dispo:"+dispo+"|R\u00e9gularit\u00e9:"+regularite+"|FreinsTech:"+blocTech+"|FreinsMentaux:"+blocMental+"|Objectif:"+objLabels+"|Style:"+styleOpt.styleLabel+"|PremierCap:"+dureePremier+"|Estimation:"+dureeObjectif;
-  return{duree,dureePremier,dureeInter,dureeObjectif,microWeeks,premierWeeks,interWeeks,objWeeks,rythmeLine,niveauLabel,niveauShort,niveauObjTexte,blocageTexte,mentalTexte,dispoTexte,niveau,regularite,dispo,blocTech,blocMental,diagResume,jalon1Desc,jalon2Desc,jalon3Desc,objLabels,styleOpt,styleStr};
+  return{duree,dureePremier,dureeInter,dureeObjectif,microWeeks,premierWeeks,interWeeks,objWeeks,rythmeLine,finalLine,niveauLabel,niveauShort,niveauObjTexte,blocageTexte,mentalTexte,dispoTexte,niveau,regularite,dispo,blocTech,blocMental,diagResume,jalon1Desc,jalon2Desc,jalon3Desc,objLabels,styleOpt,styleStr};
 }
 
 function makeOptHTML(opt,i,isSel,isMulti){
@@ -469,7 +477,7 @@ function renderResult(){
     <div class="result-header">
       <div class="result-tag">Ton diagnostic personnalis\u00e9</div>
       <div class="result-title">Hello ${prenom?prenom+"\u00a0!":"!"}</div>
-      <div class="result-time">Tes premiers vrais r\u00e9sultats\u00a0: <span class="hl">${d.dureePremier}</span>.</div>
+      <div class="result-time">Ton d\u00e9clic\u00a0: <span class="hl">${d.dureePremier}</span>, le moment o\u00f9 tu te d\u00e9bloques vraiment.</div>
       <div class="result-body">Et ce n\u2019est pas une estimation au hasard. Elle est calcul\u00e9e \u00e0 partir de ton niveau, de ton temps disponible, de tes objectifs et de ce qui te bloque vraiment.</div>
     </div>
     <div class="axes-grid">
@@ -484,10 +492,10 @@ function renderResult(){
         <div class="map-title">Ton chemin vers ton objectif</div>
         <div class="map-track">
           <div class="map-vline"></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot now">\uD83D\uDCCD</div></div><div class="stop-week">Aujourd\u2019hui</div><div class="stop-label">Tu es ici</div><div class="stop-desc">Tu cherches \u00e0 comprendre ce qui te bloque. <b>C\u2019est d\u00e9j\u00e0 le premier pas le plus important.</b></div></div>
           <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">Semaine ${d.microWeeks}</div><div class="stop-label">Ton trait se d\u00e9lie</div><div class="stop-desc">Premi\u00e8res formes contr\u00f4l\u00e9es, la main se coordonne avec l\u2019\u0153il.</div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid" style="background:#e2790e">\u2726</div></div><div class="stop-week" style="color:#e2790e">${d.dureePremier}</div><div class="stop-label" style="color:#e2790e">Premier cap</div><div class="stop-desc"><b>Tu commences \u00e0 ma\u00eetriser de plus en plus.</b> ${cap(d.jalon1Desc)}.</div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">${d.dureeInter}</div><div class="stop-label">Cap interm\u00e9diaire</div><div class="stop-desc">${cap(d.jalon2Desc)}.</div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot goal">\u2605</div></div><div class="stop-week">Objectif \u00b7 Niveau solide</div><div class="stop-label">${cap(d.jalon3Desc)}</div><div class="stop-desc">${d.rythmeLine}</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid" style="background:#e2790e">\u2726</div></div><div class="stop-week" style="color:#e2790e">Premier cap \u00b7 ${d.dureePremier}</div><div class="stop-label" style="color:#e2790e">Tu te d\u00e9bloques</div><div class="stop-desc">Tu dessines d\u00e9j\u00e0 ce que tu aimes, de mani\u00e8re bien plus fluide qu\u2019avant.</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot goal">\u2605</div></div><div class="stop-week">Tout en bas du chemin</div><div class="stop-label">Niveau solide</div><div class="stop-desc">${d.finalLine}</div></div>
         </div>
       </div>
     </div>
@@ -498,7 +506,7 @@ function renderResult(){
       <div class="result-block"><div class="block-label">Ton rythme de progression</div><div class="block-text">${d.dispoTexte}</div></div>
     </div>
     <div class="rt-section">
-      <p class="rt-title">Leur parcours, bientôt le tien</p>
+      <p class="rt-title">La preuve que c’est possible</p>
       <div class="rt-carousel"><div class="rt-track" id="rt-track"><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/lou-apres.jpg" alt="après"><p class="rt-cap">Étude d’observation d’après un dessin de Loish</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Lou</p><span class="rt-badge">Niveau de base : <b>grand débutant</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (étude d’observation) en <b>4 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Avant les cours avec Caroline, je n’osais même pas vraiment dessiner… Aujourd’hui, quand je regarde le dessin que je viens de terminer, j’ai presque du mal à croire que c’est moi qui l’ai fait. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/marie-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div><div class="rt-acol"><img class="rt-img" src="images/marie-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’observation (d’après photo)</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Marie</p><span class="rt-badge">Niveau de base : <b>grande débutante</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>5 à 6 mois</b>, avec <b>1 h30/semaine</b> en moyenne.</p><p class="rt-quote">« Je n’avais aucune base, aucune notion : j’osais très peu dessiner et j’étais frustrée. Aujourd’hui je vois mon évolution et je suis déjà très contente de ce que j’ai réalisé grâce à ta méthode. C’est hyper motivant pour continuer. »</p></div></div><div class="rt-card"><div class="rt-progress"><div class="rt-group"><div class="rt-fhead">AVANT</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-avant.jpg" alt="avant"></div></div></div><div class="rt-arrow">→</div><div class="rt-group"><div class="rt-fhead">APRÈS</div><div class="rt-fbody"><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-1.jpg" alt="après"><p class="rt-cap">Dessin d’observation</p></div><div class="rt-acol"><img class="rt-img" src="images/jennyfer-apres-2.jpg" alt="après"><p class="rt-cap">Dessin d’imagination</p></div></div></div></div><div class="rt-meta"><p class="rt-name">Jennyfer</p><span class="rt-badge">Niveau de base : <b>débutante</b></span><p class="rt-timing">⏱ A réussi à faire ce type de dessin (imagination et observation) en <b>6 mois</b>, avec <b>1 h/semaine</b> en moyenne.</p><p class="rt-quote">« Les cours avec Caroline sont un vrai plaisir : passionnée, pédagogue et toujours à l’écoute. Son approche bienveillante et ses explications claires m’ont permis de gagner en confiance et de constater une réelle évolution depuis mes débuts. »</p></div></div></div></div>
       <div class="rt-controls"><button class="rt-nav" onclick="rtMove(-1)" aria-label="Précédent">‹</button><div class="rt-dots"><span class="rt-dot active" onclick="rtGo(0)"></span><span class="rt-dot" onclick="rtGo(1)"></span><span class="rt-dot" onclick="rtGo(2)"></span></div><button class="rt-nav" onclick="rtMove(1)" aria-label="Suivant">›</button></div>
     </div>
