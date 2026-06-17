@@ -320,10 +320,11 @@ function computeDiagnosis(){
   const styleStr=styleOpt.styleLabel?" en style "+styleOpt.styleLabel:"";
   const isHardObj=target>=350;
   let niveauObjTexte="";
-  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") demande un vrai chemin, mais <b>tes premiers vrais r\u00e9sultats arrivent d\u00e8s "+dureePremier+"</b>. Le niveau solide complet se construit sur "+dureeObjectif+", et <b>chaque \u00e9tape est d\u00e9j\u00e0 gratifiante</b>.";
-  else if(niveau<=1&&!isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>tout \u00e0 fait accessible</b> avec la bonne m\u00e9thode. Premiers r\u00e9sultats visibles d\u00e8s "+dureePremier+", et un niveau solide en "+dureeObjectif+".";
-  else if(niveau===2&&isHardObj) niveauObjTexte="Tu es <b>interm\u00e9diaire</b>, ce qui est d\u00e9j\u00e0 une belle base. En "+dureeObjectif+" tu franchis le cap entre \u00ab\u00a0je me d\u00e9brouille\u00a0\u00bb et \u00ab\u00a0je cr\u00e9e vraiment\u00a0\u00bb, avec des progr\u00e8s nets d\u00e8s "+dureePremier+".";
-  else niveauObjTexte="Ton niveau actuel et ton objectif ("+objLabels+styleStr+") sont <b>bien align\u00e9s</b>. Premiers gains d\u00e8s "+dureePremier+", et un niveau de fluidit\u00e9 qui va te surprendre en "+dureeObjectif+".";
+  const horizonSolide=isLong?("mais pour un niveau vraiment solide avec "+dispoShort+", il te faudra <b>plusieurs ann\u00e9es</b>"):("et un niveau solide en <b>"+dureeObjectif+"</b>");
+  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") demande un vrai chemin, mais <b>tes premiers vrais r\u00e9sultats arrivent d\u00e8s "+dureePremier+"</b>, et <b>chaque \u00e9tape est d\u00e9j\u00e0 gratifiante</b>.";
+  else if(niveau<=1) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>tout \u00e0 fait accessible</b> avec la bonne m\u00e9thode. Premiers r\u00e9sultats visibles d\u00e8s "+dureePremier+", "+horizonSolide+".";
+  else if(niveau===2) niveauObjTexte="Tu es <b>interm\u00e9diaire</b>, ce qui est d\u00e9j\u00e0 une belle base. Tu d\u00e9bloques de vrais progr\u00e8s d\u00e8s "+dureePremier+", "+horizonSolide+".";
+  else niveauObjTexte="Ton niveau actuel et ton objectif ("+objLabels+styleStr+") sont <b>bien align\u00e9s</b>. Premiers gains d\u00e8s "+dureePremier+", "+horizonSolide+".";
   let blocageTexte="";
   if(blocTech>0&&blocMental>0) blocageTexte="Tes freins sont \u00e0 la fois <b>techniques et mentaux</b>. C\u2019est tr\u00e8s courant et \u00e7a s\u2019adresse ensemble\u00a0: souvent, d\u00e9bloquer le technique redonne de la confiance, et la confiance acc\u00e9l\u00e8re le technique.";
   else if(blocTech>0) blocageTexte="Ton frein principal est <b>technique</b>\u00a0: tu manques de rep\u00e8res clairs sur quoi travailler et dans quel ordre. Ce type de blocage se l\u00e8ve <b>rapidement avec une m\u00e9thode structur\u00e9e</b>.";
