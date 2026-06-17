@@ -220,10 +220,10 @@ const QUESTIONS = [
     subtitle:"Sois honn\u00eate\u00b7te avec toi-m\u00eame, pas le temps id\u00e9al, le temps r\u00e9el\u00a0!",
     type:"single", img:img_q5_sablier,
     options:[
-      {label:"30 minutes ou moins", score:0},
-      {label:"Entre 30 min et 1h", score:1},
-      {label:"Entre 1h et 2h", score:2},
-      {label:"Plus de 2h, j\u2019ai envie et je peux prioriser le dessin", score:3}
+      {label:"1h ou moins", score:0},
+      {label:"Entre 1h et 2h", score:1},
+      {label:"Entre 2h et 4h", score:2},
+      {label:"Plus de 4h, j\u2019ai envie et je peux prioriser le dessin", score:3}
     ]
   },
   { id:"q6", step:6, total:8,
@@ -231,11 +231,11 @@ const QUESTIONS = [
     subtitle:"Tu peux cocher plusieurs r\u00e9ponses",
     type:"multiopen",
     options:[
-      {label:"Des personnages originaux de mon univers (fantasy, fiction...)", extraWeeks:4, objLabel:"des personnages originaux", jalon1:"esquisser ta premi\u00e8re silhouette de personnage reconnaissable", jalon2:"cr\u00e9er un personnage complet avec une pose et une expression", img:img_q6_personnage},
-      {label:"Des portraits expressifs qui capturent des \u00e9motions et de la personnalit\u00e9", extraWeeks:4, objLabel:"des portraits expressifs", jalon1:"dessiner un visage avec des proportions coh\u00e9rentes", jalon2:"capturer une vraie expression sur un visage de face ou de 3/4", img:img_q6_portrait},
-      {label:"Des cr\u00e9atures imaginaires ou des animaux", extraWeeks:2, objLabel:"des cr\u00e9atures et animaux", jalon1:"construire une silhouette originale \u00e0 partir de formes simples", jalon2:"dessiner une cr\u00e9ature compl\u00e8te avec du volume et des d\u00e9tails", img:img_q6_creature},
-      {label:"Mes propres illustrations pour des projets perso ou pro", extraWeeks:6, objLabel:"tes propres illustrations", jalon1:"r\u00e9aliser une composition simple avec un sujet central clair", jalon2:"produire une illustration aboutie que tu serais fier\u00b7e de partager", img:img_q6_illustration},
-      {label:"Des fanarts de mes univers pr\u00e9f\u00e9r\u00e9s (manga, jeux vid\u00e9o, films...)", extraWeeks:0, objLabel:"des fanarts", jalon1:"reproduire un personnage que tu aimes dans son style d\u2019origine", jalon2:"r\u00e9interpr\u00e9ter ce personnage avec ta propre touche", img:img_q6_fanart}
+      {label:"Des personnages originaux de mon univers (fantasy, fiction...)", extraWeeks:4, objLabel:"des personnages originaux", jalon1:"tu poses une silhouette aux bonnes proportions", jalon2:"tu redessines des personnages complets en t\u2019aidant de r\u00e9f\u00e9rences", jalon3:"tu inventes tes propres personnages de t\u00eate", img:img_q6_personnage},
+      {label:"Des portraits expressifs qui capturent des \u00e9motions et de la personnalit\u00e9", extraWeeks:4, objLabel:"des portraits expressifs", jalon1:"tu places correctement les traits d\u2019un visage", jalon2:"tu dessines un portrait ressemblant d\u2019apr\u00e8s photo", jalon3:"tu dessines des portraits expressifs de m\u00e9moire", img:img_q6_portrait},
+      {label:"Des cr\u00e9atures imaginaires ou des animaux", extraWeeks:2, objLabel:"des cr\u00e9atures et animaux", jalon1:"tu poses les volumes de base d\u2019un animal simple", jalon2:"tu dessines un animal reconnaissable d\u2019apr\u00e8s mod\u00e8le", jalon3:"tu dessines des animaux expressifs et tes propres cr\u00e9atures invent\u00e9es", img:img_q6_creature},
+      {label:"Mes propres illustrations pour des projets perso ou pro", extraWeeks:6, objLabel:"tes propres illustrations", jalon1:"tu composes une sc\u00e8ne simple et lisible", jalon2:"tu r\u00e9alises une illustration compl\u00e8te d\u2019apr\u00e8s r\u00e9f\u00e9rences", jalon3:"tu dessines une sc\u00e8ne de ton imagination dans ton propre style", img:img_q6_illustration},
+      {label:"Des fanarts de mes univers pr\u00e9f\u00e9r\u00e9s (manga, jeux vid\u00e9o, films...)", extraWeeks:0, objLabel:"des fanarts", jalon1:"ton trait s\u2019assure, avec une premi\u00e8re petite reproduction", jalon2:"tu reproduis fid\u00e8lement un perso que tu aimes dans son style", jalon3:"tu le redessines dans ton propre style, de t\u00eate", img:img_q6_fanart}
     ]
   },
   { id:"q7", step:7, total:8,
@@ -276,26 +276,46 @@ function computeDiagnosis(){
   const maxObjExtra=Math.max(...objIndices.map(i=>objQ.options[i].extraWeeks||0));
   const niveauLabel=niveau===0?"compl\u00e8tement d\u00e9butant\u00b7e":niveau===1?"d\u00e9butant\u00b7e avec quelques bases":niveau===2?"interm\u00e9diaire":"interm\u00e9diaire avanc\u00e9\u00b7e";
   const niveauShort=niveau<=1?"D\u00e9butant\u00b7e":niveau===2?"Interm\u00e9diaire":"Interm\u00e9diaire avanc\u00e9\u00b7e";
-  let base=niveau===0?[10,14]:niveau===1?[7,11]:niveau===2?[4,8]:[2,5];
-  if(dispo===0) base=base.map(x=>x+12);
-  else if(dispo===1) base=base.map(x=>x+4);
-  else if(dispo===3) base=base.map(x=>Math.max(x-2,2));
-  base=base.map(x=>x+maxObjExtra);
-  base=base.map(x=>x+(styleOpt.extraWeeks||0));
-  if(regularite>=2) base=base.map(x=>Math.max(x-2,2));
-  const semMin=base[0],semMax=base[1];
-  const duree=semMin===semMax?semMin+" semaines":semMin+" \u00e0 "+semMax+" semaines";
-  const jalonS1=Math.max(2,Math.round(semMin*0.22));
-  const jalonS2=Math.max(4,Math.round(semMin*0.55));
-  const jalon1Desc=primaryObj?primaryObj.jalon1:"poser tes premi\u00e8res lignes avec intention";
-  const jalon2Desc=primaryObj?primaryObj.jalon2:"r\u00e9aliser un dessin complet dont tu seras fier\u00b7e";
+  const PALIERS=[0,15,130,250,350,900];
+  const startMap=[0,15,130,250];
+  const start=startMap[niveau]!==undefined?startMap[niveau]:0;
+  const hsemMap=[0.75,1.5,3,5];
+  const hsemBase=hsemMap[dispo]!==undefined?hsemMap[dispo]:1.5;
+  const regArr=[0.7,0.85,1,1];
+  const regFactor=regArr[regularite]!==undefined?regArr[regularite]:0.85;
+  const hsem=hsemBase*regFactor;
+  const targetMap=[350,250,300];
+  let target=targetMap[styleIdx]!==undefined?targetMap[styleIdx]:300;
+  if(target<=start){ const nxt=PALIERS.find(p=>p>start); target=nxt!==undefined?nxt:900; }
+  const remaining=target-start;
+  const weeksFor=h=>Math.max(1,Math.ceil(h/hsem));
+  const premierHours=Math.min(15,remaining/3);
+  const premierWeeks=weeksFor(premierHours);
+  const microWeeks=Math.max(2,Math.round(premierWeeks*0.3));
+  let interHours=remaining*0.55;
+  const midPaliers=PALIERS.filter(p=>p>start&&p<target).map(p=>p-start);
+  if(midPaliers.length){ interHours=midPaliers.reduce((a,b)=>Math.abs(b-interHours)<Math.abs(a-interHours)?b:a); }
+  const interWeeks=weeksFor(interHours);
+  const objWeeks=weeksFor(remaining);
+  function humanDur(w){ if(w<=12) return w+" semaines"; const m=Math.round(w/4.345); if(m<12) return "~"+m+" mois"; const y=Math.floor(m/12),r=m%12; const ys=y+" an"+(y>1?"s":""); return r===0?"~"+ys:"~"+ys+" "+r+" mois"; }
+  const dureePremier=humanDur(premierWeeks);
+  const dureeInter=humanDur(interWeeks);
+  const dureeObjectif=humanDur(objWeeks);
+  const duree=dureeObjectif;
+  const fr=n=>(""+n).replace(".",",");
+  let rythmeLine;
+  if(dispo<3){ const altH=hsemMap[dispo+1]*regFactor; const altW=Math.max(1,Math.ceil(remaining/altH)); rythmeLine="\u00c0 ton rythme ("+fr(hsemBase)+"\u00a0h/sem) \u2248 <b>"+dureeObjectif+"</b> \u00b7 \u00e0 "+fr(hsemMap[dispo+1])+"\u00a0h/sem avec un plan structur\u00e9 \u2248 <b>"+humanDur(altW)+"</b>"; }
+  else { rythmeLine="\u00c0 ce rythme soutenu ("+fr(hsemBase)+"\u00a0h/sem), tu vises <b>"+dureeObjectif+"</b> \u2014 et avec un plan structur\u00e9, chaque heure compte double."; }
+  const jalon1Desc=primaryObj&&primaryObj.jalon1?primaryObj.jalon1:"tu poses tes premi\u00e8res formes avec intention";
+  const jalon2Desc=primaryObj&&primaryObj.jalon2?primaryObj.jalon2:"tu reproduis fid\u00e8lement ce que tu observes";
+  const jalon3Desc=primaryObj&&primaryObj.jalon3?primaryObj.jalon3:"tu dessines ce que tu imagines dans ton propre style";
   const styleStr=styleOpt.styleLabel?" en style "+styleOpt.styleLabel:"";
-  const isHardObj=maxObjExtra>=4;
+  const isHardObj=target>=350;
   let niveauObjTexte="";
-  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>techniquement ambitieux</b>. C\u2019est une excellente nouvelle\u00a0: avoir un objectif clair, c\u2019est le meilleur moteur qui soit. Le chemin sera progressif, mais <b>chaque \u00e9tape sera d\u00e9j\u00e0 gratifiante</b>. En quelques semaines tu pourras d\u00e9j\u00e0 "+jalon1Desc+", ce qui est d\u00e9j\u00e0 immense quand on part de z\u00e9ro.";
-  else if(niveau<=1&&!isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>tout \u00e0 fait accessible</b> avec la bonne m\u00e9thode. Tu peux esp\u00e9rer des <b>r\u00e9sultats visibles rapidement</b>, et ton objectif final est \u00e0 port\u00e9e en "+duree+".";
-  else if(niveau===2&&isHardObj) niveauObjTexte="Tu es <b>interm\u00e9diaire</b>, ce qui est d\u00e9j\u00e0 une belle base. Ton objectif ("+objLabels+styleStr+") n\u00e9cessite encore un travail de fond, mais tu as <b>l\u2019essentiel pour y arriver</b>. En "+duree+", tu peux franchir le cap qui fait la diff\u00e9rence entre \"je me d\u00e9brouille\" et \"je cr\u00e9e vraiment\".";
-  else niveauObjTexte="Ton niveau actuel et ton objectif ("+objLabels+styleStr+") sont <b>bien align\u00e9s</b>. Tu as les bases, il te manque la m\u00e9thode et le bon regard. En "+duree+", tu peux atteindre <b>un niveau de fluidit\u00e9 qui va te surprendre</b>.";
+  if(niveau<=1&&isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") demande un vrai chemin\u2014mais <b>tes premiers vrais r\u00e9sultats arrivent d\u00e8s "+dureePremier+"</b>. Le niveau solide complet se construit sur "+dureeObjectif+", et <b>chaque \u00e9tape est d\u00e9j\u00e0 gratifiante</b>.";
+  else if(niveau<=1&&!isHardObj) niveauObjTexte="Tu pars d\u2019un niveau <b>"+niveauLabel+"</b>, et ton objectif ("+objLabels+styleStr+") est <b>tout \u00e0 fait accessible</b> avec la bonne m\u00e9thode. Premiers r\u00e9sultats visibles d\u00e8s "+dureePremier+", et un niveau solide en "+dureeObjectif+".";
+  else if(niveau===2&&isHardObj) niveauObjTexte="Tu es <b>interm\u00e9diaire</b>, ce qui est d\u00e9j\u00e0 une belle base. En "+dureeObjectif+" tu franchis le cap entre \u00ab\u00a0je me d\u00e9brouille\u00a0\u00bb et \u00ab\u00a0je cr\u00e9e vraiment\u00a0\u00bb, avec des progr\u00e8s nets d\u00e8s "+dureePremier+".";
+  else niveauObjTexte="Ton niveau actuel et ton objectif ("+objLabels+styleStr+") sont <b>bien align\u00e9s</b>. Premiers gains d\u00e8s "+dureePremier+", et un niveau de fluidit\u00e9 qui va te surprendre en "+dureeObjectif+".";
   let blocageTexte="";
   if(blocTech>0&&blocMental>0) blocageTexte="Tes freins sont \u00e0 la fois <b>techniques et mentaux</b>. C\u2019est tr\u00e8s courant et \u00e7a s\u2019adresse ensemble\u00a0: souvent, d\u00e9bloquer le technique redonne de la confiance, et la confiance acc\u00e9l\u00e8re le technique.";
   else if(blocTech>0) blocageTexte="Ton frein principal est <b>technique</b>\u00a0: tu manques de rep\u00e8res clairs sur quoi travailler et dans quel ordre. Ce type de blocage se l\u00e8ve <b>rapidement avec une m\u00e9thode structur\u00e9e</b>.";
@@ -306,12 +326,12 @@ function computeDiagnosis(){
   else if(mental===2) mentalTexte="Tu cherches \u00e0 comprendre et \u00e0 corriger. C\u2019est <b>une des meilleures dispositions pour progresser</b>\u00a0: tu ne l\u00e2ches pas, tu ajustes.";
   else mentalTexte="Tu as une <b>belle l\u00e9g\u00e8ret\u00e9 face \u00e0 l\u2019erreur</b>. Les personnes qui acceptent d\u2019\u00eatre imparfaites progressent beaucoup plus vite. Garde pr\u00e9cieusement cet \u00e9tat d\u2019esprit.";
   let dispoTexte="";
-  if(dispo===0) dispoTexte="<b>30 minutes ou moins par semaine</b>, c\u2019est peu, mais ce n\u2019est pas rien. L\u2019estimation en tient compte s\u00e9rieusement\u00a0: avec ce rythme, chaque session doit \u00eatre <b>tr\u00e8s cibl\u00e9e et sans dispersion</b> pour avancer vraiment.";
-  else if(dispo===1) dispoTexte="<b>30 min \u00e0 1h par semaine</b>, c\u2019est honn\u00eate. Avec une m\u00e9thode efficace, \u00e7a suffit pour <b>progresser de fa\u00e7on r\u00e9guli\u00e8re et visible</b>.";
-  else if(dispo===2) dispoTexte="<b>1h \u00e0 2h par semaine</b>, c\u2019est un bon rythme. Tu pourras voir des progr\u00e8s clairs, \u00e0 condition de pratiquer plut\u00f4t que regarder des tutos.";
-  else dispoTexte="<b>Plus de 2h par semaine</b>, c\u2019est un vrai investissement. Si cette \u00e9nergie est bien orient\u00e9e, les progr\u00e8s peuvent \u00eatre <b>spectaculaires</b>.";
-  const diagResume="Niveau:"+niveauShort+"|Dispo:"+dispo+"|R\u00e9gularit\u00e9:"+regularite+"|FreinsTech:"+blocTech+"|FreinsMentaux:"+blocMental+"|Objectif:"+objLabels+"|Style:"+styleOpt.styleLabel+"|Estimation:"+duree;
-  return{duree,niveauLabel,niveauShort,niveauObjTexte,blocageTexte,mentalTexte,dispoTexte,niveau,regularite,dispo,blocTech,blocMental,diagResume,jalonS1,jalonS2,jalon1Desc,jalon2Desc,objLabels,styleOpt,styleStr};
+  if(dispo===0) dispoTexte="<b>1h ou moins par semaine</b>, c\u2019est peu, mais ce n\u2019est pas rien. \u00c0 ce rythme, chaque session doit \u00eatre <b>tr\u00e8s cibl\u00e9e</b>\u2014et l\u2019estimation en tient compte honn\u00eatement.";
+  else if(dispo===1) dispoTexte="<b>Entre 1h et 2h par semaine</b>, c\u2019est un rythme honn\u00eate. Avec une m\u00e9thode efficace, tu progresses <b>de fa\u00e7on r\u00e9guli\u00e8re et visible</b>.";
+  else if(dispo===2) dispoTexte="<b>Entre 2h et 4h par semaine</b>, c\u2019est un bon rythme. Les progr\u00e8s deviennent clairs, \u00e0 condition de pratiquer plut\u00f4t que de regarder des tutos.";
+  else dispoTexte="<b>Plus de 4h par semaine</b>, c\u2019est un vrai investissement. Bien orient\u00e9e, cette \u00e9nergie peut rendre tes progr\u00e8s <b>spectaculaires</b>.";
+  const diagResume="Niveau:"+niveauShort+"|Dispo:"+dispo+"|R\u00e9gularit\u00e9:"+regularite+"|FreinsTech:"+blocTech+"|FreinsMentaux:"+blocMental+"|Objectif:"+objLabels+"|Style:"+styleOpt.styleLabel+"|PremierCap:"+dureePremier+"|Estimation:"+dureeObjectif;
+  return{duree,dureePremier,dureeInter,dureeObjectif,microWeeks,premierWeeks,interWeeks,objWeeks,rythmeLine,niveauLabel,niveauShort,niveauObjTexte,blocageTexte,mentalTexte,dispoTexte,niveau,regularite,dispo,blocTech,blocMental,diagResume,jalon1Desc,jalon2Desc,jalon3Desc,objLabels,styleOpt,styleStr};
 }
 
 function makeOptHTML(opt,i,isSel,isMulti){
@@ -440,15 +460,16 @@ function renderResult(){
   const regularDot=d.regularite<=1?"low":d.regularite===2?"mid":"high";
   const freinDot=(d.blocTech+d.blocMental)>=2?"low":(d.blocTech+d.blocMental)===1?"mid":"high";
   const niveauVal=d.niveau<=1?"D\u00e9butant\u00b7e":d.niveau===2?"Interm\u00e9diaire":"Interm\u00e9diaire avanc\u00e9\u00b7e";
-  const dispoVal=d.dispo===0?"Moins de 30 min":d.dispo===1?"30 min \u00e0 1h":d.dispo===2?"1h \u00e0 2h":"Plus de 2h";
+  const dispoVal=d.dispo===0?"1h ou moins":d.dispo===1?"1h \u00e0 2h":d.dispo===2?"2h \u00e0 4h":"Plus de 4h";
   const regularVal=d.regularite<=1?"Irr\u00e9gulier\u00b7e":d.regularite===2?"Assez r\u00e9gulier\u00b7e":"Tr\u00e8s r\u00e9gulier\u00b7e";
   const freinVal=(d.blocTech+d.blocMental)>=2?"Multiples freins":(d.blocTech+d.blocMental)===1?"Un frein principal":"Peu de freins";
   const goalDesc=d.objLabels+(d.styleStr||"");
+  const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
   document.getElementById("quiz-body").innerHTML=`
     <div class="result-header">
       <div class="result-tag">Ton diagnostic personnalis\u00e9</div>
       <div class="result-title">Hello ${prenom?prenom+"\u00a0!":"!"}</div>
-      <div class="result-time">Tu pourrais atteindre tes objectifs dessin en <span class="hl">${d.duree}</span>.</div>
+      <div class="result-time">Tes premiers vrais r\u00e9sultats\u00a0: <span class="hl">${d.dureePremier}</span>.</div>
       <div class="result-body">Et ce n\u2019est pas une estimation au hasard. Elle est calcul\u00e9e \u00e0 partir de ton niveau, de ton temps disponible, de tes objectifs et de ce qui te bloque vraiment.</div>
     </div>
     <div class="axes-grid">
@@ -460,13 +481,13 @@ function renderResult(){
     <div class="map-card">
       <div class="map-bg"></div><div class="map-border"></div><div class="map-border2"></div>
       <div class="map-inner">
-        <div class="map-title">Ton chemin vers l\u2019objectif</div>
+        <div class="map-title">Ton chemin vers ton objectif</div>
         <div class="map-track">
           <div class="map-vline"></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot now">\uD83D\uDCCD</div></div><div class="stop-week">Aujourd\u2019hui</div><div class="stop-label">Tu es ici</div><div class="stop-desc">Tu cherches \u00e0 comprendre ce qui te bloque. <b>C\u2019est d\u00e9j\u00e0 le premier pas le plus important.</b></div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">Semaine ${d.jalonS1}</div><div class="stop-label">Premier cap</div><div class="stop-desc">Tu pourras <b>${d.jalon1Desc}</b>. Un r\u00e9sultat concret, pas juste de la th\u00e9orie.</div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">Semaine ${d.jalonS2}</div><div class="stop-label">Cap interm\u00e9diaire</div><div class="stop-desc">Tu pourras <b>${d.jalon2Desc}</b>. La feuille blanche ne te fera plus peur.</div></div>
-          <div class="map-stop"><div class="map-dot-col"><div class="map-dot goal">\u2605</div></div><div class="stop-week">Objectif final \u00b7 ${d.duree}</div><div class="stop-label">Tu dessines ce que tu imagines</div><div class="stop-desc"><b>${goalDesc}</b>, avec fluidit\u00e9 et confiance.</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">Semaine ${d.microWeeks}</div><div class="stop-label">Ton trait se d\u00e9lie</div><div class="stop-desc">Premi\u00e8res formes contr\u00f4l\u00e9es, la main se coordonne avec l\u2019\u0153il.</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid" style="background:#e2790e">\u2726</div></div><div class="stop-week" style="color:#e2790e">${d.dureePremier}</div><div class="stop-label" style="color:#e2790e">Premier cap</div><div class="stop-desc"><b>Tu commences \u00e0 ma\u00eetriser de plus en plus.</b> ${cap(d.jalon1Desc)}.</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot mid">\u2726</div></div><div class="stop-week">${d.dureeInter}</div><div class="stop-label">Cap interm\u00e9diaire</div><div class="stop-desc">${cap(d.jalon2Desc)}.</div></div>
+          <div class="map-stop"><div class="map-dot-col"><div class="map-dot goal">\u2605</div></div><div class="stop-week">Objectif \u00b7 Niveau solide</div><div class="stop-label">${cap(d.jalon3Desc)}</div><div class="stop-desc">${d.rythmeLine}</div></div>
         </div>
       </div>
     </div>
