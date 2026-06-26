@@ -21,6 +21,12 @@ export async function onRequestPost(context) {
   const AIRTABLE_TOKEN  = env.AIRTABLE_TOKEN;
   const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE = "Réponses quiz";
+  // En-tete navigateur : sans lui, le CloudFront de Systeme.io renvoie 403
+  const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+  // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
+  // c'est que la BONNE version (champs vides ignorés) est bien en ligne.
+  console.log("=== submit.js VERSION 2026-06-26-B (champs vides ignores) ===");
 
   let data;
   try {
@@ -36,7 +42,7 @@ export async function onRequestPost(context) {
   try {
     // Récupérer les tags
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
-      headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json" }
+      headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json", "User-Agent": UA }
     });
     const tagsData = await tagsRes.json();
     console.log("Tags disponibles:", JSON.stringify(tagsData));
@@ -50,17 +56,19 @@ export async function onRequestPost(context) {
     }
     console.log("Tags trouvés:", JSON.stringify(tagIds));
 
-    // Champs à mettre à jour
-    const fields = [
-      { slug: "first_name", value: prenom || "" },
-      { slug: "phone_number", value: tel || "" },
-      { slug: "diagnostic_quiz", value: (diagnostic || "").substring(0, 500) }
-    ];
+    // Champs à mettre à jour.
+    // ⚠️ Systeme.io rejette tout le contact (422) si un champ a une valeur vide.
+    // On n'ajoute donc que les champs réellement remplis (le téléphone est optionnel).
+    const fields = [];
+    if (prenom && prenom.trim()) fields.push({ slug: "first_name", value: prenom.trim() });
+    if (tel && tel.trim()) fields.push({ slug: "phone_number", value: tel.trim() });
+    const diagValue = (diagnostic || "").substring(0, 500);
+    if (diagValue) fields.push({ slug: "diagnostic_quiz", value: diagValue });
 
     // Vérifier si le contact existe déjà
     const searchRes = await fetch(
       `https://api.systeme.io/api/contacts?email=${encodeURIComponent(email)}`,
-      { headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json" } }
+      { headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json", "User-Agent": UA } }
     );
     const searchData = await searchRes.json();
     console.log("Recherche contact existant:", JSON.stringify(searchData));
@@ -78,7 +86,7 @@ export async function onRequestPost(context) {
         `https://api.systeme.io/api/contacts/${contactId}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+          headers: { "Content-Type": "application/merge-patch+json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
           body: JSON.stringify({ fields })
         }
       );
@@ -88,7 +96,7 @@ export async function onRequestPost(context) {
       // Nouveau contact → POST (sans tags dans le body, bug API Systeme.io)
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+        headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
         body: JSON.stringify({ email, fields })
       });
       const postData = await postRes.json();
@@ -103,7 +111,7 @@ export async function onRequestPost(context) {
           `https://api.systeme.io/api/contacts/${contactId}/tags`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY },
+            headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
             body: JSON.stringify({ tagId: tag.id })
           }
         );
