@@ -1,42 +1,44 @@
-exports.handler = async function(event) {
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "POST, OPTIONS"
-      },
-      body: ""
-    };
-  }
+// Cloudflare Pages Function — route automatique : /api/submit
+// Emplacement dans le repo : functions/api/submit.js
+// Variables d'environnement à définir dans Cloudflare Pages (Settings → Environment variables) :
+//   SYSTEME_API_KEY, AIRTABLE_TOKEN, AIRTABLE_BASE_ID
 
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
 
-  const SYSTEME_API_KEY = process.env.SYSTEME_API_KEY;
-  const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+// Pré-vol CORS
+export async function onRequestOptions() {
+  return new Response("", { status: 200, headers: CORS });
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  const SYSTEME_API_KEY = env.SYSTEME_API_KEY;
+  const AIRTABLE_TOKEN  = env.AIRTABLE_TOKEN;
+  const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE = "Réponses quiz";
+  // En-tete navigateur : sans lui, le CloudFront de Systeme.io renvoie 403
+  const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
   let data;
   try {
-    data = JSON.parse(event.body);
-  } catch(e) {
-    return { statusCode: 400, body: "Invalid JSON" };
+    data = await request.json();
+  } catch (e) {
+    return new Response("Invalid JSON", { status: 400, headers: CORS });
   }
 
   const { prenom, email, tel, answers, diagnostic } = data;
+  const safeAnswers = answers || {};
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
     // Récupérer les tags
     const tagsRes = await fetch("https://api.systeme.io/api/tags?limit=100", {
-      headers: {
-        "X-API-Key": SYSTEME_API_KEY,
-        "Content-Type": "application/json"
-      }
+      headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json", "User-Agent": UA }
     });
     const tagsData = await tagsRes.json();
     console.log("Tags disponibles:", JSON.stringify(tagsData));
@@ -60,12 +62,7 @@ exports.handler = async function(event) {
     // Vérifier si le contact existe déjà
     const searchRes = await fetch(
       `https://api.systeme.io/api/contacts?email=${encodeURIComponent(email)}`,
-      {
-        headers: {
-          "X-API-Key": SYSTEME_API_KEY,
-          "Content-Type": "application/json"
-        }
-      }
+      { headers: { "X-API-Key": SYSTEME_API_KEY, "Content-Type": "application/json", "User-Agent": UA } }
     );
     const searchData = await searchRes.json();
     console.log("Recherche contact existant:", JSON.stringify(searchData));
@@ -83,10 +80,7 @@ exports.handler = async function(event) {
         `https://api.systeme.io/api/contacts/${contactId}`,
         {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": SYSTEME_API_KEY
-          },
+          headers: { "Content-Type": "application/merge-patch+json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
           body: JSON.stringify({ fields })
         }
       );
@@ -96,10 +90,7 @@ exports.handler = async function(event) {
       // Nouveau contact → POST (sans tags dans le body, bug API Systeme.io)
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": SYSTEME_API_KEY
-        },
+        headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
         body: JSON.stringify({ email, fields })
       });
       const postData = await postRes.json();
@@ -114,10 +105,7 @@ exports.handler = async function(event) {
           `https://api.systeme.io/api/contacts/${contactId}/tags`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-API-Key": SYSTEME_API_KEY
-            },
+            headers: { "Content-Type": "application/json", "X-API-Key": SYSTEME_API_KEY, "User-Agent": UA },
             body: JSON.stringify({ tagId: tag.id })
           }
         );
@@ -126,7 +114,7 @@ exports.handler = async function(event) {
       }
     }
 
-  } catch(e) {
+  } catch (e) {
     console.error("Erreur Systeme.io:", e.message);
   }
 
@@ -145,7 +133,8 @@ exports.handler = async function(event) {
   ];
   const q3Labels = ["Rarement ou jamais", "De temps en temps", "1 à 2 fois par semaine", "Régulièrement"];
   const q4Labels = ["Je froisse la feuille", "Je le range sans le montrer", "J'essaie de corriger", "Je rigole et je passe au suivant"];
-  const q5Labels = ["30 min ou moins", "30 min à 1h", "1h à 2h", "Plus de 2h"];
+  // ⚠️ mis à jour pour coller aux nouveaux créneaux de Q5 dans le quiz
+  const q5Labels = ["1h ou moins", "Entre 1h et 2h", "Entre 2h et 4h", "Plus de 4h"];
   const q6Labels = ["Personnages originaux", "Portraits expressifs", "Créatures et animaux", "Illustrations perso/pro", "Fanarts"];
   const q7Labels = ["Réaliste / semi-réaliste", "Stylisé / manga / cartoon", "J'explore !"];
 
@@ -155,15 +144,15 @@ exports.handler = async function(event) {
       "Email": email || "",
       "Téléphone": tel || "",
       "Date": new Date().toISOString(),
-      "Q1 - Niveau actuel": answers.q1 !== undefined ? niveauLabels[answers.q1] : "",
-      "Q2 - Blocages cochés": (answers.q2 || []).map(i => q2Labels[i]).join(", "),
-      "Q2 - Précision libre": answers.q2_open || "",
-      "Q3 - Régularité": answers.q3 !== undefined ? q3Labels[answers.q3] : "",
-      "Q4 - Rapport à l'erreur": answers.q4 !== undefined ? q4Labels[answers.q4] : "",
-      "Q5 - Disponibilité": answers.q5 !== undefined ? q5Labels[answers.q5] : "",
-      "Q6 - Objectifs dessin": (answers.q6 || []).map(i => q6Labels[i]).join(", "),
-      "Q7 - Style visé": answers.q7 !== undefined ? q7Labels[answers.q7] : "",
-      "Q8 - Ressenti dans 1 an": answers.q8 || "",
+      "Q1 - Niveau actuel": safeAnswers.q1 !== undefined ? niveauLabels[safeAnswers.q1] : "",
+      "Q2 - Blocages cochés": (safeAnswers.q2 || []).map(i => q2Labels[i]).join(", "),
+      "Q2 - Précision libre": safeAnswers.q2_open || "",
+      "Q3 - Régularité": safeAnswers.q3 !== undefined ? q3Labels[safeAnswers.q3] : "",
+      "Q4 - Rapport à l'erreur": safeAnswers.q4 !== undefined ? q4Labels[safeAnswers.q4] : "",
+      "Q5 - Disponibilité": safeAnswers.q5 !== undefined ? q5Labels[safeAnswers.q5] : "",
+      "Q6 - Objectifs dessin": (safeAnswers.q6 || []).map(i => q6Labels[i]).join(", "),
+      "Q7 - Style visé": safeAnswers.q7 !== undefined ? q7Labels[safeAnswers.q7] : "",
+      "Q8 - Ressenti dans 1 an": safeAnswers.q8 || "",
       "Diagnostic complet": diagnostic || ""
     }
   };
@@ -182,16 +171,12 @@ exports.handler = async function(event) {
     );
     const atResult = await atRes.text();
     console.log("Airtable réponse:", atRes.status, atResult);
-  } catch(e) {
+  } catch (e) {
     console.error("Erreur Airtable:", e.message);
   }
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ success: true })
-  };
-};
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: { ...CORS, "Content-Type": "application/json" }
+  });
+}
