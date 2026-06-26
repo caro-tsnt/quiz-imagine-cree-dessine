@@ -56,6 +56,11 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 .result-time { font-family: "Oswald", sans-serif; font-size: 17px; color: #f0ebe6; margin-bottom: 14px; line-height: 1.4; }
 .hl { color: #eea02d; font-weight: 500; }
 .result-body { font-size: 15px; color: #e9e1d3; line-height: 1.65; }
+.archetype-card { background: #fff; border: 1.5px solid #e9e1d3; border-left: 4px solid #e2790e; border-radius: 14px; padding: 24px 26px; margin-bottom: 16px; }
+.arch-eyebrow { font-family: "Oswald", sans-serif; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #926044; margin-bottom: 8px; }
+.arch-name { font-family: "Oswald", sans-serif; font-size: 24px; font-weight: 600; color: #e2790e; line-height: 1.15; margin-bottom: 12px; }
+.arch-mirror { font-size: 15px; color: #301b08; line-height: 1.7; margin-bottom: 14px; }
+.arch-key { font-size: 15px; font-weight: 500; color: #301b08; line-height: 1.7; background: #fdf0dc; border-radius: 10px; padding: 14px 16px; }
 .axes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .axis-pill { background: #f0ebe6; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
 .axis-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
@@ -133,7 +138,7 @@ html, body { min-height: 100vh; background: #f0ebe6; font-family: "Archivo Narro
 .bg-illu.right { right: -50px; transform: rotate(7deg); }
 body.intro-active .bg-illu { display: block !important; }
 @media (max-width: 950px) { .bg-illu { width: 250px; opacity: 0.11; } .bg-illu.left { left: -75px; } .bg-illu.right { right: -65px; } }
-@media (max-width: 560px) { .bg-illu { width: 160px; opacity: 0.09; bottom: -8px; } .bg-illu.left { left: -55px; } .bg-illu.right { right: -50px; } }
+@media (max-width: 560px) { .bg-illu { width: 200px; opacity: 0.16; bottom: auto; top: 50%; } .bg-illu.left { left: -45px; transform: translateY(-50%) rotate(-7deg); } .bg-illu.right { right: -40px; transform: translateY(-50%) rotate(7deg); } }
 
 #quiz-body.intro-mode { max-width: 720px; margin: 0 auto; padding: 22px 24px 70px; position: relative; z-index: 1; text-align: center; }
 #quiz-body.intro-mode .s { margin-bottom: 18px; }
@@ -190,6 +195,7 @@ body.intro-active .bg-illu { display: block !important; }
 #quiz-body.intro-mode .speaks-title { font-family: "Oswald", sans-serif; font-size: 16px; font-weight: 500; color: #301b08; margin-bottom: 14px; }
 #quiz-body.intro-mode .speaks-items { display: flex; flex-direction: column; gap: 11px; max-width: 480px; margin: 0 auto; }
 #quiz-body.intro-mode .speaks-item { font-size: 15px; color: #301b08; line-height: 1.5; }
+#quiz-body.intro-mode .speaks-item b { color: #e2790e; font-weight: 500; }
 
 #quiz-body.intro-mode .reassure-big { font-family: "Oswald", sans-serif; font-size: 21px; font-weight: 500; color: #301b08; margin-bottom: 9px; line-height: 1.25; }
 #quiz-body.intro-mode .reassure-big .hl { color: #e2790e; }
@@ -215,7 +221,7 @@ body.intro-active .bg-illu { display: block !important; }
 <div id="quiz-root">
   <div class="quiz-header">
     <span class="brand">Imagine, Crée, Dessine</span>
-    <span class="brand" id="step-counter">1 / 8</span>
+    <span class="brand" id="step-counter">1 / 9</span>
   </div>
   <div class="progress-bar-outer">
     <div class="progress-bar-inner" id="progress-bar" style="width:12%;"></div>
@@ -254,7 +260,7 @@ async function submitData(prenom, email, tel, allAnswers, diagResume) {
 }
 
 const QUESTIONS = [
-  { id:"q1", step:1, total:8,
+  { id:"q1", step:1, total:9,
     title:"Quand tu essaies de dessiner quelque chose, qu\u2019est-ce qui se passe en g\u00e9n\u00e9ral\u00a0?",
     type:"single",
     options:[
@@ -264,7 +270,7 @@ const QUESTIONS = [
       {label:"Je me d\u00e9brouille, mais il y a toujours un d\u00e9tail qui cloche et \u00e7a me frustre", score:3, gif:"https://media.giphy.com/media/JWpJ6czCHrweK7uIvz/giphy.gif"}
     ]
   },
-  { id:"q2", step:2, total:8,
+  { id:"q2", step:2, total:9,
     title:"Ce qui t\u2019emp\u00eache le plus d\u2019avancer en dessin, c\u2019est...",
     subtitle:"Tu peux cocher jusqu\u2019\u00e0 2 r\u00e9ponses",
     type:"multi_open", max:2,
@@ -278,7 +284,16 @@ const QUESTIONS = [
       {label:"Je manque de confiance, j\u2019ai peur que ce soit \"nul\" avant m\u00eame de commencer", btype:"mental"}
     ]
   },
-  { id:"q3", step:3, total:8,
+  { id:"qa", step:3, total:9,
+    title:"Quand tu penses à ta progression en dessin, qu’est-ce qui te ressemble le plus ?",
+    type:"single",
+    options:[
+      {label:"J’ai en tête des dessins précis que j’aimerais créer, mais ce que je produis n’y arrive pas (encore), alors je bloque ou je n’ose pas me lancer.", score:0},
+      {label:"Je commence plein de choses, je saute d’un tuto, d’un style ou d’un sujet à l’autre, sans jamais vraiment approfondir.", score:1},
+      {label:"Je dessine assez régulièrement, mais j’ai l’impression de tourner en rond, de plafonner sans savoir comment franchir le cap suivant.", score:2}
+    ]
+  },
+  { id:"q3", step:4, total:9,
     title:"En ce moment, tu dessines...",
     type:"single",
     options:[
@@ -288,7 +303,7 @@ const QUESTIONS = [
       {label:"R\u00e9guli\u00e8rement, plusieurs fois par semaine", score:3}
     ]
   },
-  { id:"q4", step:4, total:8,
+  { id:"q4", step:5, total:9,
     title:"Tu viens de finir un dessin. Un \u00e9l\u00e9ment est l\u00e9g\u00e8rement rat\u00e9. Tu fais quoi\u00a0?",
     type:"single",
     options:[
@@ -298,7 +313,7 @@ const QUESTIONS = [
       {label:"Je rigole et je passe au suivant, l\u2019important c\u2019est de progresser", score:3, gif:"https://media2.giphy.com/media/lI9tlte4qEKT1pDxvk/giphy.gif"}
     ]
   },
-  { id:"q5", step:5, total:8,
+  { id:"q5", step:6, total:9,
     title:"Dans une semaine normale, tu pourrais consacrer combien de temps au dessin\u00a0?",
     subtitle:"Sois honn\u00eate\u00b7te avec toi-m\u00eame, pas le temps id\u00e9al, le temps r\u00e9el\u00a0!",
     type:"single", img:img_q5_sablier,
@@ -309,7 +324,7 @@ const QUESTIONS = [
       {label:"Plus de 4h, j\u2019ai envie et je peux prioriser le dessin", score:3}
     ]
   },
-  { id:"q6", step:6, total:8,
+  { id:"q6", step:7, total:9,
     title:"Si tu savais dessiner avec fluidit\u00e9, qu\u2019est-ce que tu cr\u00e9erais\u00a0?",
     subtitle:"Tu peux cocher plusieurs r\u00e9ponses",
     type:"multiopen",
@@ -321,7 +336,7 @@ const QUESTIONS = [
       {label:"Des fanarts de mes univers pr\u00e9f\u00e9r\u00e9s (manga, jeux vid\u00e9o, films...)", extraWeeks:0, objLabel:"des fanarts", jalon1:"ton trait s\u2019assure, avec une premi\u00e8re petite reproduction", jalon2:"tu reproduis fid\u00e8lement un perso que tu aimes dans son style", jalon3:"tu le redessines dans ton propre style, de t\u00eate", img:img_q6_fanart}
     ]
   },
-  { id:"q7", step:7, total:8,
+  { id:"q7", step:8, total:9,
     title:"Quel style de dessin aimerais-tu le plus apprendre \u00e0 ma\u00eetriser\u00a0?",
     type:"single",
     options:[
@@ -330,7 +345,7 @@ const QUESTIONS = [
       {label:"Je ne sais pas encore, j\u2019explore\u00a0!", extraWeeks:0, styleLabel:"", img:img_q7_explore}
     ]
   },
-  { id:"q8", step:8, total:8,
+  { id:"q8", step:9, total:9,
     title:"Si dans quelques mois tu savais enfin dessiner avec fluidit\u00e9 ce que tu imagines... comment te sentirais-tu\u00a0?",
     subtitle:"Cette question est facultative, r\u00e9ponds si tu le souhaites.",
     type:"open"
@@ -351,9 +366,10 @@ function computeDiagnosis(){
   const blocTech=blocages.filter(i=>[0,2].includes(i)).length;
   const blocMental=blocages.filter(i=>[1,3].includes(i)).length;
   const styleIdx=answers.q7!==undefined?answers.q7:1;
-  const styleOpt=QUESTIONS[6].options[styleIdx]||QUESTIONS[6].options[1];
+  const styleQ=QUESTIONS.find(q=>q.id==="q7");
+  const styleOpt=styleQ.options[styleIdx]||styleQ.options[1];
   const objIndices=answers.q6||[0];
-  const objQ=QUESTIONS[5];
+  const objQ=QUESTIONS.find(q=>q.id==="q6");
   const objLabels=objIndices.map(i=>objQ.options[i].objLabel).join(", ");
   const primaryObj=objQ.options[objIndices[0]];
   const maxObjExtra=Math.max(...objIndices.map(i=>objQ.options[i].extraWeeks||0));
@@ -424,6 +440,46 @@ function computeDiagnosis(){
   else dispoTexte="<b>Plus de 4h par semaine</b>, c\u2019est un vrai investissement. Bien orient\u00e9e, cette \u00e9nergie peut rendre tes progr\u00e8s <b>spectaculaires</b>.";
   const diagResume="Niveau:"+niveauShort+"|Dispo:"+dispo+"|R\u00e9gularit\u00e9:"+regularite+"|FreinsTech:"+blocTech+"|FreinsMentaux:"+blocMental+"|Objectif:"+objLabels+"|Style:"+styleOpt.styleLabel+"|PremierCap:"+dureePremier+"|Estimation:"+dureeObjectif;
   return{duree,dureePremier,dureeInter,dureeObjectif,microWeeks,premierWeeks,interWeeks,objWeeks,rythmeLine,finalLine,niveauLabel,niveauShort,niveauObjTexte,blocageTexte,mentalTexte,dispoTexte,niveau,regularite,dispo,blocTech,blocMental,diagResume,jalon1Desc,jalon2Desc,jalon3Desc,objLabels,styleOpt,styleStr};
+}
+
+const ARCHETYPES = [
+  {
+    key:"perfectionniste",
+    nom:"Visionnaire Perfectionniste",
+    miroir:"Tu as une vision claire de ce que tu veux créer, et c’est une vraie force. Mais l’écart entre ton exigence et ce que ta main produit aujourd’hui te bloque, parfois au point de ne plus oser te lancer.",
+    cle:"Ta clé : t’autoriser des dessins imparfaits. Avancer malgré l’imperfection est une compétence à part entière, et c’est elle qui débloque tout le reste."
+  },
+  {
+    key:"disperse",
+    nom:"Explorateur·rice Dispersé·e",
+    miroir:"Ta curiosité est immense : tu touches à tout, tu testes plein de styles et de sujets. C’est précieux, mais à force de sauter d’une chose à l’autre, tu n’approfondis jamais assez pour voir tes progrès s’installer.",
+    cle:"Ta clé : choisir un seul cap à la fois et t’y tenir le temps de vraiment progresser. Un chemin structuré transforme ton énergie dispersée en vraie maîtrise."
+  },
+  {
+    key:"plafond",
+    nom:"Solitaire au Plafond de Verre",
+    miroir:"Tu dessines régulièrement et tu as déjà un vrai niveau. Mais tu tournes en rond : tu sens un plafond au-dessus de toi sans savoir comment le franchir, et avancer seul·e devient frustrant.",
+    cle:"Ta clé : un regard extérieur et un travail ciblé sur ce qui te bloque vraiment. C’est exactement ce qui fait sauter un plafond de verre, là où la pratique en solo finit par tourner."
+  }
+];
+
+function computeArchetype(){
+  const portrait=answers.qa;            // 0=perfectionniste, 1=dispers·e, 2=plafond
+  const niveau=answers.q1!==undefined?answers.q1:1;
+  const reg=answers.q3!==undefined?answers.q3:0;
+  let idx;
+  if(portrait===2 && niveau<=1){
+    // On ne plafonne pas contre un plafond qu’on n’a pas encore atteint :
+    // un·e vrai·e débutant·e qui se sent bloqu·e est plutôt perfectionniste
+    // (s’iel pratique régulièrement) ou dispers·e (sinon).
+    idx = reg>=2 ? 0 : 1;
+  } else if(portrait!==undefined){
+    idx = portrait;
+  } else {
+    // Filet de sécurité si la question n’a pas été répondue.
+    idx = (niveau>=2 && reg>=2) ? 2 : (reg>=2 ? 0 : 1);
+  }
+  return ARCHETYPES[idx];
 }
 
 function makeOptHTML(opt,i,isSel,isMulti){
@@ -537,8 +593,10 @@ function renderCapture(){
   btn.addEventListener("click",async()=>{
     btn.disabled=true;btn.textContent="Analyse en cours...";
     const d=computeDiagnosis();
+    const arch=computeArchetype();
     answers.prenom=prenom.value.trim();
-    await submitData(prenom.value.trim(),email.value.trim(),tel.value.trim(),answers,d.diagResume);
+    answers.archetype=arch.nom;
+    await submitData(prenom.value.trim(),email.value.trim(),tel.value.trim(),answers,d.diagResume+"|Archétype:"+arch.nom);
     currentStep=QUESTIONS.length+1;renderResult();
   });
 }
@@ -547,6 +605,7 @@ function renderResult(){
   setProgress(TOTAL_STEPS);
   document.getElementById("step-counter").textContent="";
   const d=computeDiagnosis(),prenom=answers.prenom||"";
+  const arch=computeArchetype();
   const niveauDot=d.niveau<=1?"low":d.niveau===2?"mid":"high";
   const dispoDot=d.dispo<=1?"low":d.dispo===2?"mid":"high";
   const regularDot=d.regularite<=1?"low":d.regularite===2?"mid":"high";
@@ -563,6 +622,12 @@ function renderResult(){
       <div class="result-title">Hello ${prenom?prenom+"\u00a0!":"!"}</div>
       <div class="result-time">Ton d\u00e9clic\u00a0: <span class="hl">${d.dureePremier}</span>, le moment o\u00f9 tu te d\u00e9bloques vraiment.</div>
       <div class="result-body">Et ce n\u2019est pas une estimation au hasard. Elle est calcul\u00e9e \u00e0 partir de ton niveau, de ton temps disponible, de tes objectifs et de ce qui te bloque vraiment.</div>
+    </div>
+    <div class="archetype-card">
+      <div class="arch-eyebrow">Ton profil d’artiste</div>
+      <div class="arch-name">${arch.nom}</div>
+      <div class="arch-mirror">${arch.miroir}</div>
+      <div class="arch-key">${arch.cle}</div>
     </div>
     <div class="axes-grid">
       <div class="axis-pill"><div class="axis-dot ${niveauDot}"></div><span class="axis-label">Niveau</span><span class="axis-val">${niveauVal}</span></div>
@@ -603,19 +668,12 @@ function renderResult(){
 }
 
 
-let introQ1Val = null;
-function selectIntroQ1(btn){
-  introQ1Val = parseInt(btn.getAttribute("data-val"),10);
-  document.querySelectorAll("#opts-q1 .option-btn").forEach(b=>b.classList.remove("selected"));
-  btn.classList.add("selected");
-}
 function startQuizFromIntro(){
   const body=document.getElementById("quiz-body");
   body.classList.remove("intro-mode");
   document.body.classList.remove("intro-active");
   const sc=document.getElementById("step-counter"); if(sc) sc.style.visibility="visible";
-  if(introQ1Val!==null){ answers.q1=introQ1Val; currentStep=1; }
-  else { currentStep=0; }
+  currentStep=0;
   window.scrollTo(0,0);
   renderStep();
 }
@@ -690,31 +748,9 @@ function renderIntro(){
     <div class="meta-duree">
       <span>&#128336; 3 minutes</span>
       <span class="meta-dot"></span>
-      <span>11 questions</span>
+      <span>9 questions</span>
       <span class="meta-dot"></span>
       <span>aucune bonne ou mauvaise réponse</span>
-    </div>
-
-    <p class="q1-heading">Réponds à cette première question</p>
-    <h2 class="q1-title">Quand tu essaies de dessiner quelque chose, qu'est-ce qui se passe en général&nbsp;?</h2>
-
-    <div class="options-list" id="opts-q1">
-      <button class="option-btn" type="button" data-val="0" onclick="selectIntroQ1(this)">
-        <span class="opt-check">&#10003;</span>
-        Je ne sais même pas par où commencer, la page blanche me bloque.
-      </button>
-      <button class="option-btn" type="button" data-val="1" onclick="selectIntroQ1(this)">
-        <span class="opt-check">&#10003;</span>
-        Je me lance, mais le résultat ne ressemble pas du tout à ce que j'avais en tête.
-      </button>
-      <button class="option-btn" type="button" data-val="2" onclick="selectIntroQ1(this)">
-        <span class="opt-check">&#10003;</span>
-        Ça commence à ressembler, mais il reste toujours des erreurs de proportions ou de construction que je n'arrive pas à corriger.
-      </button>
-      <button class="option-btn" type="button" data-val="3" onclick="selectIntroQ1(this)">
-        <span class="opt-check">&#10003;</span>
-        Je m'en sors plutôt bien&nbsp;: je cherche surtout à gagner en fluidité, en style, ou à dessiner de mémoire / en digital.
-      </button>
     </div>
   </div>
 
@@ -738,10 +774,10 @@ function renderIntro(){
     <div class="speaks-card">
       <p class="speaks-title">Ce quiz est fait pour toi si...</p>
       <div class="speaks-items">
-        <div class="speaks-item">Tu rêves de dessiner tes propres portraits ou personnages, mais tu n'oses pas te lancer.</div>
-        <div class="speaks-item">Tu pratiques depuis un moment, mais ton dessin stagne et tu ne sais pas quoi changer.</div>
-        <div class="speaks-item">Tu commences plein de choses et tu n'en finis aucune : tutoriels, carnets, projets.</div>
-        <div class="speaks-item">Tu te demandes si c'est vraiment fait pour toi, ou s'il te manque juste la bonne méthode.</div>
+        <div class="speaks-item">🔸 Tu rêves de <b>dessiner tes propres portraits ou personnages,</b> mais tu n'oses pas te lancer.</div>
+        <div class="speaks-item">🔸 Tu pratiques depuis un moment, mais <b>ton dessin stagne</b> et tu ne sais pas quoi changer.</div>
+        <div class="speaks-item">🔸 Tu commences plein de choses et <b>tu n'en finis aucune</b> : tutoriels, carnets, projets.</div>
+        <div class="speaks-item">🔸 Tu te demandes si c'est vraiment fait pour toi, ou <b>s'il te manque juste la bonne méthode.</b></div>
       </div>
     </div>
   </div>
