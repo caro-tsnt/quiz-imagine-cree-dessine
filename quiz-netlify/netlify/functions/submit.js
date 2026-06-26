@@ -52,12 +52,14 @@ export async function onRequestPost(context) {
     }
     console.log("Tags trouvés:", JSON.stringify(tagIds));
 
-    // Champs à mettre à jour
-    const fields = [
-      { slug: "first_name", value: prenom || "" },
-      { slug: "phone_number", value: tel || "" },
-      { slug: "diagnostic_quiz", value: (diagnostic || "").substring(0, 500) }
-    ];
+    // Champs à mettre à jour.
+    // ⚠️ Systeme.io rejette tout le contact (422) si un champ a une valeur vide.
+    // On n'ajoute donc que les champs réellement remplis (le téléphone est optionnel).
+    const fields = [];
+    if (prenom && prenom.trim()) fields.push({ slug: "first_name", value: prenom.trim() });
+    if (tel && tel.trim()) fields.push({ slug: "phone_number", value: tel.trim() });
+    const diagValue = (diagnostic || "").substring(0, 500);
+    if (diagValue) fields.push({ slug: "diagnostic_quiz", value: diagValue });
 
     // Vérifier si le contact existe déjà
     const searchRes = await fetch(
