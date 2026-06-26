@@ -230,6 +230,15 @@ body.intro-active .bg-illu { display: block !important; }
 #calendly-embed { min-width: 320px; height: 680px; }
 .cal-fallback { text-align: center; font-size: 13px; color: #926044; margin: 4px 0 16px; }
 .cal-fallback a { color: #e2790e; font-weight: 500; }
+
+/* ===== Layout cote a cote cta + calendrier ===== */
+.cta-cal-row { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 14px; }
+.cta-cal-row .cta-card { flex: 1; min-width: 0; margin-bottom: 0; }
+.cta-cal-row .cal-wrap { flex: 1; min-width: 0; margin-bottom: 0; }
+@media (max-width: 700px) {
+  .cta-cal-row { flex-direction: column; }
+  .cta-cal-row .cta-card, .cta-cal-row .cal-wrap { width: 100%; }
+}
 </style>
 <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
@@ -422,7 +431,7 @@ function computeDiagnosis(){
   const fr=n=>(""+n).replace(".",",");
   let rythmeLine;
   if(dispo<3){ const altH=hsemMap[dispo+1]*regFactor; const altW=Math.max(1,Math.ceil(remaining/altH)); rythmeLine="\u00c0 ton rythme ("+fr(hsemBase)+"\u00a0h/sem) \u2248 <b>"+dureeObjectif+"</b> \u00b7 \u00e0 "+fr(hsemMap[dispo+1])+"\u00a0h/sem avec un plan structur\u00e9 \u2248 <b>"+humanDur(altW)+"</b>"; }
-  else { rythmeLine="\u00c0 ce rythme soutenu ("+fr(hsemBase)+"\u00a0h/sem), tu vises <b>"+dureeObjectif+"</b>, et avec un plan structur\u00e9, chaque heure compte double."; }
+  else { rythmeLine="\u00c0 ce rythme soutenu ("+fr(hsemBase)+"\u00a0h/sem), viser <b>"+dureeObjectif+"</b> est tout \u00e0 fait r\u00e9aliste. Avec un plan structur\u00e9, chaque heure compte double."; }
   const objMonths=Math.round(objWeeks/4.345);
   const isLong=objMonths>=48;
   const dispoShort=["moins d\u20191h par semaine","1 \u00e0 2h par semaine","2 \u00e0 4h par semaine","plus de 4h par semaine"][dispo]||"ce rythme";
@@ -686,12 +695,14 @@ function renderResult(){
       <div class="rt-controls"><button class="rt-nav" onclick="rtMove(-1)" aria-label="Précédent">‹</button><div class="rt-dots"><span class="rt-dot active" onclick="rtGo(0)"></span><span class="rt-dot" onclick="rtGo(1)"></span><span class="rt-dot" onclick="rtGo(2)"></span></div><button class="rt-nav" onclick="rtMove(1)" aria-label="Suivant">›</button></div>
     </div>
     <div class="next-step-head">Pour aller plus loin<span class="nsh-arrow">\u2193</span></div>
-    <div class="cta-card">
-      <div class="cta-eyebrow">Ce que ce diagnostic ne peut pas te dire</div>
-      <div class="cta-title">Il t\u2019indique combien de temps et ce qui bloque. <b>Mais pas le chemin exact adapt\u00e9 \u00e0 ton niveau, ton style et tes objectifs.</b></div>
-      <div class="cta-sub">Si tu le souhaites, envoie-moi 2-3 de tes dessins, et on se retrouve <b>30 min en visio</b>. <b>Je te dirai exactement ce que je vois, ce que je travaillerais en premier, et si ma formation peut t\u2019aider, ou pas\u00a0!</b><br><br>Pas de pitch, pas de pression, pas d\u2019engagement, et tu repars dans tous les cas avec <b>un plan d\u2019action concret</b> \uD83D\uDE42</div>
+    <div class="cta-cal-row">
+      <div class="cta-card">
+        <div class="cta-eyebrow">Ce que ce diagnostic ne peut pas te dire</div>
+        <div class="cta-title">Il t\u2019indique combien de temps et ce qui bloque. <b>Mais pas le chemin exact adapt\u00e9 \u00e0 ton niveau, ton style et tes objectifs.</b></div>
+        <div class="cta-sub">Si tu le souhaites, envoie-moi 2-3 de tes dessins, et on se retrouve <b>30 min en visio</b>. <b>Je te dirai exactement ce que je vois, ce que je travaillerais en premier, et si ma formation peut t\u2019aider, ou pas\u00a0!</b><br><br>Pas de pitch, pas de pression, pas d\u2019engagement, et tu repars dans tous les cas avec <b>un plan d\u2019action concret</b> \uD83D\uDE42</div>
+      </div>
+      <div class="cal-wrap"><div id="calendly-embed"></div></div>
     </div>
-    <div class="cal-wrap"><div id="calendly-embed"></div></div>
     <p class="cal-fallback">Le calendrier ne s\u2019affiche pas\u00a0? <a href="${CALENDLY_URL}" target="_blank">R\u00e9serve ton audit ici.</a></p>`;
   initCalendly();
 }
