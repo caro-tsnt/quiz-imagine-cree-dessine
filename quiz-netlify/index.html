@@ -239,6 +239,12 @@ body.intro-active .bg-illu { display: block !important; }
   .cta-cal-row { flex-direction: column; }
   .cta-cal-row .cta-card, .cta-cal-row .cal-wrap { width: 100%; }
 }
+
+/* ===== Video Caroline (haut page resultat) ===== */
+.result-video-wrap { margin-bottom: 16px; }
+.rv-label { font-family: "Oswald", sans-serif; font-size: 15px; font-weight: 500; color: #301b08; text-align: center; margin-bottom: 10px; }
+.rv-frame { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 4px 18px rgba(48,27,8,0.18); }
+.rv-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 </style>
 <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
@@ -657,6 +663,10 @@ function renderResult(){
       <div class="result-title">Hello ${prenom?prenom+"\u00a0!":"!"}</div>
       <div class="result-time">Ton d\u00e9clic\u00a0: <span class="hl">${d.dureePremier}</span>, le moment o\u00f9 tu te d\u00e9bloques vraiment.</div>
       <div class="result-body">Et ce n\u2019est pas une estimation au hasard. Elle est calcul\u00e9e \u00e0 partir de ton niveau, de ton temps disponible, de tes objectifs et de ce qui te bloque vraiment.</div>
+    </div>
+    <div class="result-video-wrap">
+      <div class="rv-label">Avant de d\u00e9couvrir ton diagnostic, un petit mot de Caroline</div>
+      <div class="rv-frame"><iframe src="https://www.youtube.com/embed/J8wEVU6zzcw" title="Un mot de Caroline" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
     </div>
     <div class="archetype-card">
       <div class="arch-eyebrow">Ton profil d’artiste</div>
