@@ -24,6 +24,10 @@ export async function onRequestPost(context) {
   // En-tete navigateur : sans lui, le CloudFront de Systeme.io renvoie 403
   const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+  // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
+  // c'est que la BONNE version (champs vides ignorés) est bien en ligne.
+  console.log("=== submit.js VERSION 2026-06-26-B (champs vides ignores) ===");
+
   let data;
   try {
     data = await request.json();
