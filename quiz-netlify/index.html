@@ -611,18 +611,17 @@ function renderCapture(){
       <div class="field-group">
         <input class="field-input" id="cap-prenom" type="text" placeholder="Ton pr\u00e9nom" autocomplete="given-name"/>
         <input class="field-input" id="cap-email" type="email" placeholder="Ton adresse email" autocomplete="email"/>
-        <input class="field-input" id="cap-tel" type="tel" placeholder="Ton num\u00e9ro de t\u00e9l\u00e9phone (optionnel)" autocomplete="tel"/>
       </div>
       <label class="consent-row" id="consent-row">
         <div class="consent-box" id="consent-box"></div>
-        <span class="consent-text">J\u2019accepte d\u2019\u00eatre recontact\u00e9\u00b7e par email et/ou sms par Caroline dans le cadre de mon diagnostic dessin. Je peux me d\u00e9sinscrire \u00e0 tout moment.</span>
+        <span class="consent-text">J\u2019accepte d\u2019\u00eatre recontact\u00e9\u00b7e par email par Caroline dans le cadre de mon diagnostic dessin. Je peux me d\u00e9sinscrire \u00e0 tout moment.</span>
       </label>
       <p class="legal">En continuant, tu acceptes de recevoir ton diagnostic par email. Donn\u00e9es trait\u00e9es conform\u00e9ment au RGPD.</p>
       <button class="next-btn" id="cap-btn" style="margin-top:16px;" disabled>D\u00e9couvrir mon diagnostic</button>
     </div>`;
-  const btn=document.getElementById("cap-btn"),prenom=document.getElementById("cap-prenom"),email=document.getElementById("cap-email"),tel=document.getElementById("cap-tel"),consentBox=document.getElementById("consent-box");
+  const btn=document.getElementById("cap-btn"),prenom=document.getElementById("cap-prenom"),email=document.getElementById("cap-email"),consentBox=document.getElementById("consent-box");
   function checkAll(){btn.disabled=!(prenom.value.trim()&&email.value.includes("@")&&consentWhatsapp);}
-  prenom.addEventListener("input",checkAll);email.addEventListener("input",checkAll);tel.addEventListener("input",checkAll);
+  prenom.addEventListener("input",checkAll);email.addEventListener("input",checkAll);
   document.getElementById("consent-row").addEventListener("click",()=>{consentWhatsapp=!consentWhatsapp;consentBox.className="consent-box"+(consentWhatsapp?" checked":"");consentBox.textContent=consentWhatsapp?"\u2713":"";checkAll();});
   btn.addEventListener("click",async()=>{
     btn.disabled=true;btn.textContent="Analyse en cours...";
@@ -630,7 +629,7 @@ function renderCapture(){
     const arch=computeArchetype();
     answers.prenom=prenom.value.trim();
     answers.archetype=arch.nom;
-    await submitData(prenom.value.trim(),email.value.trim(),tel.value.trim(),answers,d.diagResume+"|Archétype:"+arch.nom);
+    await submitData(prenom.value.trim(),email.value.trim(),"",answers,d.diagResume+"|Archétype:"+arch.nom);
     currentStep=QUESTIONS.length+1;renderResult();
   });
 }
