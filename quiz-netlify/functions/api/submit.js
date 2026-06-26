@@ -26,7 +26,7 @@ export async function onRequestPost(context) {
 
   // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
   // c'est que la BONNE version (champs vides ignorés) est bien en ligne.
-  console.log("=== submit.js VERSION 2026-06-26-B (champs vides ignores) ===");
+  console.log("=== submit.js VERSION 2026-06-26-C (tag 'A fait le quiz') ===");
 
   let data;
   try {
@@ -47,7 +47,11 @@ export async function onRequestPost(context) {
     const tagsData = await tagsRes.json();
     console.log("Tags disponibles:", JSON.stringify(tagsData));
 
-    const tagNames = ["Téléchargement du bonus", "Toute ma liste"];
+    // "A fait le quiz" declenche la sequence de suivi quiz (mail 1).
+    // "Toute ma liste" = liste principale.
+    // ⚠️ "Telechargement du bonus" a ete RETIRE d'ici volontairement : les cadeaux
+    // sont reserves aux personnes qui prennent RDV, on applique ce tag manuellement.
+    const tagNames = ["A fait le quiz", "Toute ma liste"];
     let tagIds = [];
     if (tagsData.items) {
       tagsData.items.forEach(t => {
