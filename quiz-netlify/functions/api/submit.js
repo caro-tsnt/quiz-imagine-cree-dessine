@@ -25,8 +25,8 @@ export async function onRequestPost(context) {
   const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
   // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
-  // c'est que la BONNE version (champs vides ignorés) est bien en ligne.
-  console.log("=== submit.js VERSION 2026-06-26-C (tag 'A fait le quiz') ===");
+  // c'est que la BONNE version (tags d'archétype) est bien en ligne.
+  console.log("=== submit.js VERSION 2026-07-12-A (tags archétype pour J0) ===");
 
   let data;
   try {
@@ -38,6 +38,20 @@ export async function onRequestPost(context) {
   const { prenom, email, tel, answers, diagnostic } = data;
   const safeAnswers = answers || {};
 
+  // ── Détection de l'archétype (pour router le bon mail J0) ───────────────────
+  // Le diagnostic contient un marqueur du type "|Archétype:NomDuProfil".
+  // On en extrait le profil, puis on le mappe vers un tag Systeme.io.
+  // Matching souple sur un mot-clé pour tolérer accents, points médians et espaces.
+  let archetypeTag = "";
+  const archMatch = (diagnostic || "").match(/\|\s*Arch[ée]type\s*:\s*([^|]+)/i);
+  if (archMatch) {
+    const a = archMatch[1].toLowerCase();
+    if (a.includes("perfectionniste"))      archetypeTag = "Quiz - Visionnaire";
+    else if (a.includes("dispers"))         archetypeTag = "Quiz - Explorateur";
+    else if (a.includes("plafond"))         archetypeTag = "Quiz - Plafond de verre";
+  }
+  console.log("Archétype détecté → tag:", archetypeTag || "(aucun)");
+
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
     // Récupérer les tags
@@ -47,11 +61,13 @@ export async function onRequestPost(context) {
     const tagsData = await tagsRes.json();
     console.log("Tags disponibles:", JSON.stringify(tagsData));
 
-    // "A fait le quiz" declenche la sequence de suivi quiz (mail 1).
+    // "A fait le quiz" declenche la sequence de suivi quiz (vidéos + masterclass).
     // "Toute ma liste" = liste principale.
-    // ⚠️ "Telechargement du bonus" a ete RETIRE d'ici volontairement : les cadeaux
+    // Le tag d'archétype (si détecté) declenche le bon mail J0 personnalisé.
+    // ⚠️ "Telechargement du bonus" a ete RETIRE volontairement : les cadeaux
     // sont reserves aux personnes qui prennent RDV, on applique ce tag manuellement.
     const tagNames = ["A fait le quiz", "Toute ma liste"];
+    if (archetypeTag) tagNames.push(archetypeTag);
     let tagIds = [];
     if (tagsData.items) {
       tagsData.items.forEach(t => {
