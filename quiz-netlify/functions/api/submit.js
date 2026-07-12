@@ -26,7 +26,7 @@ export async function onRequestPost(context) {
 
   // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
   // c'est que la BONNE version (tags d'archétype) est bien en ligne.
-  console.log("=== submit.js VERSION 2026-07-12-B (tags archétype + champs perso plan) ===");
+  console.log("=== submit.js VERSION 2026-07-12-D (limite 255 caractères Systeme.io) ===");
 
   let data;
   try {
@@ -67,7 +67,9 @@ export async function onRequestPost(context) {
     }
   });
   // "~1 an" → "1 an" : le "~" ferait doublon avec le mot "environ" dans le mail
-  const estimationQuiz = (plan["Estimation"] || "").replace(/^~\s*/, "");
+  const cleanTilde = v => (v || "").replace(/^~\s*/, "");
+  const estimationQuiz = cleanTilde(plan["Estimation"]);
+  const premierCapQuiz = cleanTilde(plan["PremierCap"]);
   console.log("Plan extrait:", JSON.stringify(plan));
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
@@ -95,21 +97,22 @@ export async function onRequestPost(context) {
     console.log("Tags trouvés:", JSON.stringify(tagIds));
 
     // Champs à mettre à jour.
-    // ⚠️ Systeme.io rejette tout le contact (422) si un champ a une valeur vide.
-    // On n'ajoute donc que les champs réellement remplis (le téléphone est optionnel).
+    // ⚠️ Systeme.io rejette tout le contact (422) si un champ a une valeur vide
+    //    OU si une valeur dépasse 255 caractères. On tronque donc tout à 255.
+    const clip = v => (v || "").substring(0, 255);
     const fields = [];
-    if (prenom && prenom.trim()) fields.push({ slug: "first_name", value: prenom.trim() });
-    if (tel && tel.trim()) fields.push({ slug: "phone_number", value: tel.trim() });
-    const diagValue = (diagnostic || "").substring(0, 500);
+    if (prenom && prenom.trim()) fields.push({ slug: "first_name", value: clip(prenom.trim()) });
+    if (tel && tel.trim()) fields.push({ slug: "phone_number", value: clip(tel.trim()) });
+    const diagValue = clip(diagnostic);
     if (diagValue) fields.push({ slug: "diagnostic_quiz", value: diagValue });
 
     // Champs du plan personnalisé (variables du mail J0).
     // ⚠️ Ces champs doivent exister dans Systeme.io avec EXACTEMENT ces slugs,
     // sinon l'API renverra une erreur 422. On n'envoie que les valeurs non vides.
-    if (estimationQuiz)     fields.push({ slug: "estimation_quiz",  value: estimationQuiz });
-    if (plan["PremierCap"]) fields.push({ slug: "premier_cap_quiz", value: plan["PremierCap"] });
-    if (plan["Niveau"])     fields.push({ slug: "niveau_quiz",      value: plan["Niveau"] });
-    if (plan["Objectif"])   fields.push({ slug: "objectif_quiz",    value: plan["Objectif"] });
+    if (estimationQuiz)     fields.push({ slug: "estimation_quiz",  value: clip(estimationQuiz) });
+    if (premierCapQuiz)     fields.push({ slug: "premier_cap_quiz", value: clip(premierCapQuiz) });
+    if (plan["Niveau"])     fields.push({ slug: "niveau_quiz",      value: clip(plan["Niveau"]) });
+    if (plan["Objectif"])   fields.push({ slug: "objectif_quiz",    value: clip(plan["Objectif"]) });
 
     // Vérifier si le contact existe déjà
     const searchRes = await fetch(
@@ -138,6 +141,11 @@ export async function onRequestPost(context) {
       );
       const patchResult = await patchRes.text();
       console.log("Systeme.io PATCH réponse:", patchRes.status, patchResult);
+      if (!patchRes.ok) {
+        console.error("⚠️ ÉCHEC PATCH champs Systeme.io ! Statut:", patchRes.status,
+          "| Détail:", patchResult,
+          "| Champs envoyés:", JSON.stringify(fields));
+      }
     } else {
       // Nouveau contact → POST (sans tags dans le body, bug API Systeme.io)
       const postRes = await fetch("https://api.systeme.io/api/contacts", {
@@ -148,6 +156,11 @@ export async function onRequestPost(context) {
       const postData = await postRes.json();
       contactId = postData.id;
       console.log("Systeme.io POST réponse:", postRes.status, JSON.stringify(postData));
+      if (!postRes.ok) {
+        console.error("⚠️ ÉCHEC POST contact Systeme.io ! Statut:", postRes.status,
+          "| Le contact n'a PAS été créé : pas de tags, pas de mail J0.",
+          "| Champs envoyés:", JSON.stringify(fields));
+      }
     }
 
     // Appliquer les tags en appels séparés (obligatoire avec l'API Systeme.io)
