@@ -26,7 +26,7 @@ export async function onRequestPost(context) {
 
   // ⚑ Marqueur de version : si tu vois cette ligne dans les logs Cloudflare,
   // c'est que la BONNE version (tags d'archétype) est bien en ligne.
-  console.log("=== submit.js VERSION 2026-07-12-A (tags archétype pour J0) ===");
+  console.log("=== submit.js VERSION 2026-07-12-B (tags archétype + champs perso plan) ===");
 
   let data;
   try {
@@ -51,6 +51,24 @@ export async function onRequestPost(context) {
     else if (a.includes("plafond"))         archetypeTag = "Quiz - Plafond de verre";
   }
   console.log("Archétype détecté → tag:", archetypeTag || "(aucun)");
+
+  // ── Extraction du plan personnalisé (pour les variables du mail J0) ─────────
+  // Le diagnostic est de la forme "Clé:Valeur|Clé:Valeur|..."
+  // Exemple : "Niveau:Débutant·e|...|PremierCap:3 semaines|Estimation:~1 an|Archétype:..."
+  // On en extrait les valeurs utiles, envoyées ensuite comme champs personnalisés
+  // Systeme.io pour être insérées dans le mail J0.
+  const plan = {};
+  (diagnostic || "").split("|").forEach(part => {
+    const idx = part.indexOf(":");
+    if (idx > 0) {
+      const key = part.slice(0, idx).trim();
+      const value = part.slice(idx + 1).trim();
+      if (value) plan[key] = value;
+    }
+  });
+  // "~1 an" → "1 an" : le "~" ferait doublon avec le mot "environ" dans le mail
+  const estimationQuiz = (plan["Estimation"] || "").replace(/^~\s*/, "");
+  console.log("Plan extrait:", JSON.stringify(plan));
 
   // ── 1. SYSTEME.IO ──────────────────────────────────────────────────────────
   try {
@@ -84,6 +102,14 @@ export async function onRequestPost(context) {
     if (tel && tel.trim()) fields.push({ slug: "phone_number", value: tel.trim() });
     const diagValue = (diagnostic || "").substring(0, 500);
     if (diagValue) fields.push({ slug: "diagnostic_quiz", value: diagValue });
+
+    // Champs du plan personnalisé (variables du mail J0).
+    // ⚠️ Ces champs doivent exister dans Systeme.io avec EXACTEMENT ces slugs,
+    // sinon l'API renverra une erreur 422. On n'envoie que les valeurs non vides.
+    if (estimationQuiz)     fields.push({ slug: "estimation_quiz",  value: estimationQuiz });
+    if (plan["PremierCap"]) fields.push({ slug: "premier_cap_quiz", value: plan["PremierCap"] });
+    if (plan["Niveau"])     fields.push({ slug: "niveau_quiz",      value: plan["Niveau"] });
+    if (plan["Objectif"])   fields.push({ slug: "objectif_quiz",    value: plan["Objectif"] });
 
     // Vérifier si le contact existe déjà
     const searchRes = await fetch(
