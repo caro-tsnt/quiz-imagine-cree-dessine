@@ -205,6 +205,7 @@ body.intro-active .bg-illu { display: block !important; }
 #quiz-body.intro-mode .start-btn { background: #301b08; color: #eea02d; font-family: "Oswald", sans-serif; font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 8px; padding: 16px 36px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 420px; margin: 0 auto; }
 #quiz-body.intro-mode .start-btn:hover { background: #422918; }
 #quiz-body.intro-mode .start-btn:focus-visible { outline: 3px solid #eea02d; outline-offset: 3px; }
+#quiz-body.intro-mode .start-btn .btn-time { font-family: "Archivo Narrow", sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: none; opacity: 0.65; }
 #quiz-body.intro-mode .start-btn .arrow { font-size: 17px; transition: transform 0.2s; }
 #quiz-body.intro-mode .start-btn:hover .arrow { transform: translateX(3px); }
 @media (max-width: 480px) {
@@ -746,10 +747,8 @@ function renderIntro(){
 
   
   <div class="s">
-    <p class="eyebrow">Quiz gratuit &middot; Profil d'artiste</p>
-
     
-    <h1 class="hero-title">En combien de temps peux-tu <span class="hl">vraiment</span> progresser en dessin&nbsp;?</h1>
+    <h1 class="hero-title">En combien de temps pourras-tu (enfin) dessiner <span class="hl">ce que tu imagines</span>&nbsp;?</h1>
 
     <p class="hero-hook">Tu peux progresser <span class="hl">plus vite</span> que tu ne le penses.</p>
 
@@ -761,13 +760,13 @@ function renderIntro(){
       <span class="meme-part"><b>même si</b> tu as atteint un palier</span>
     </div>
 
-    <p class="hero-sub">Ce quiz te révèle exactement où tu en es, et comment avancer.</p>
+    <p class="hero-sub">Une estimation honnête, calculée selon ton niveau et ton rythme.</p>
   </div>
 
   
   <div class="s">
     <button class="start-btn" type="button" onclick="startQuizFromIntro()">
-      Découvrir mon profil <span class="arrow">&#8594;</span>
+      Découvrir mon profil <span class="btn-time">3 min</span> <span class="arrow">&#8594;</span>
     </button>
   </div>
 
@@ -794,7 +793,7 @@ function renderIntro(){
         <div class="ptl-stop">
           <div class="ptl-dot goal">&#9733;</div>
           <div class="ptl-name">Ton plan personnalisé + 3 leçons <span class="ptl-free">offert</span></div>
-          <div class="ptl-desc">Les prochaines étapes concrètes pour débloquer ton dessin, à appliquer tout de suite. Et 3 leçons pour apprendre à voir comme un&middot;e artiste.</div>
+          <div class="ptl-desc">Les prochaines étapes concrètes pour débloquer ta pratique : 3 leçons pour développer ton œil et avoir des dessins ressemblants.</div>
         </div>
       </div>
     </div>
@@ -819,11 +818,11 @@ function renderIntro(){
   <div class="s">
     <div class="bonus-card">
       <p class="bonus-eyebrow">&#127873; Offert avec ton résultat</p>
-      <p class="bonus-headline"><span class="hl-gold">3 leçons vidéo</span> pour apprendre à voir comme un&middot;e artiste</p>
+      <p class="bonus-headline">3 vidéos <span class="hl-gold">qui te révèlent les secrets d'observation des artistes</span> pour avoir <b>des dessins ressemblants</b></p>
       <div class="bonus-items">
-        <div class="bonus-item"><span class="bonus-num">1</span><span class="bonus-text"><b>Les masses</b> : pourquoi ton dessin manque de lisibilité, et comment y remédier.</span></div>
-        <div class="bonus-item"><span class="bonus-num">2</span><span class="bonus-text"><b>Les angles</b> : l'œil qui compare, la clé oubliée de la justesse.</span></div>
-        <div class="bonus-item"><span class="bonus-num">3</span><span class="bonus-text"><b>Les proportions</b> : mesurer pour ne plus inventer ce qu'on ne voit pas.</span></div>
+        <div class="bonus-item"><span class="bonus-num">1</span><span class="bonus-text">La raison pour laquelle <b>tes dessins manquent de lisibilité</b>, et comment y remédier.</span></div>
+        <div class="bonus-item"><span class="bonus-num">2</span><span class="bonus-text">Ce qu'il faut travailler en priorité <b>pour avoir des proportions correctes</b> et maîtriser la coordination œil/main.</span></div>
+        <div class="bonus-item"><span class="bonus-num">3</span><span class="bonus-text">Le détail qu'on a tendance à oublier mais qui permet pourtant de <b>VRAIMENT respecter tes modèles</b>.</span></div>
       </div>
     </div>
   </div>
@@ -851,7 +850,7 @@ function renderIntro(){
   <div>
     <p class="meta-final">Quiz gratuit &middot; Résultat immédiat &middot; Plan personnalisé offert</p>
     <button class="start-btn" type="button" onclick="startQuizFromIntro()">
-      Découvrir mon profil <span class="arrow">&#8594;</span>
+      Découvrir mon profil <span class="btn-time">3 min</span> <span class="arrow">&#8594;</span>
     </button>
   </div>`;
 }
